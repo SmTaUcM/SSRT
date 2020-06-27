@@ -596,7 +596,7 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
           </font>
          </property>
          <property name="text">
-          <string>Version : 1.00a</string>
+          <string>Version : 1.01a</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -619,7 +619,7 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
           </font>
          </property>
          <property name="text">
-          <string>Date: 26 June 2020</string>
+          <string>Date: 27 June 2020</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
