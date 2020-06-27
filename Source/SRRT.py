@@ -49,7 +49,14 @@ class SRRTApp(QtGui.QMainWindow):
         self.ui.teOutputWSR.setReadOnly(True)
         self.ui.teOutputMSE.setReadOnly(True)
         self.ui.teOutputMSEMisc.setReadOnly(True)
-        self.ui.teInput.setReadOnly(True)
+        self.inputText = """1) Select your desired pilot's ATR.
+2) Highlight and copy all ATR activity for your desired date range.
+3) Click the 'Paste from Clipboard and Convert to Report' button.
+
+--- OR ---
+
+For longer ATR periods spanning multiple pages, paste directly into the 'Input' box and the click 'Convert to Report' button."""
+        self.ui.teInput.setText(self.inputText)
 
         # GUI Connections.
         self.connect(self.ui.actionExit, QtCore.SIGNAL("triggered()"), closeApp)
@@ -57,6 +64,8 @@ class SRRTApp(QtGui.QMainWindow):
         self.connect(self.ui.btnCopyWSR, QtCore.SIGNAL("clicked()"), copyWSR)
         self.connect(self.ui.btnCopyMSE, QtCore.SIGNAL("clicked()"), copyMSE)
         self.connect(self.ui.btnCopyMSEMisc, QtCore.SIGNAL("clicked()"), copyMSEMisc)
+        self.connect(self.ui.btnInputClear, QtCore.SIGNAL("clicked()"), btnInputClearFunc)
+        self.connect(self.ui.teInput, QtCore.SIGNAL("textChanged()"), teInputTextChanged)
         #--------------------------------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -109,6 +118,22 @@ def deselectAll():
     #------------------------------------------------------------------------------------------------------------------------------------------------#
 
 
+def btnInputClearFunc():
+    win.ui.teInput.clear()
+    win.ui.teOutputWSR.clear()
+    win.ui.teOutputMSE.clear()
+    win.ui.teOutputMSEMisc.clear()
+    #------------------------------------------------------------------------------------------------------------------------------------------------#
+
+
+def teInputTextChanged():
+    if win.ui.teInput.toPlainText() == win.inputText or win.ui.teInput.toPlainText() == "": 
+        win.ui.btnConvert.setText("Paste from Clipboard and Convert To Report")
+    else:
+        win.ui.btnConvert.setText("Convert Input Text To Report")
+    #------------------------------------------------------------------------------------------------------------------------------------------------#
+
+
 def processData():
     # Initialise variables.
     # Intergers
@@ -157,10 +182,12 @@ def processData():
     inprUpdated = False
     inprText = ""
     miscText = ""
-
-    # Copy the data in from the clipboard.
-    root = tk.Tk()
-    win.ui.teInput.setText(root.clipboard_get())
+	
+    # Determine if the data is in the clipboard or pasted into the Input box.
+    if win.ui.teInput.toPlainText() == win.inputText or win.ui.teInput.toPlainText() == "":
+        # Copy the data in from the clipboard.
+        root = tk.Tk()
+        win.ui.teInput.setText(root.clipboard_get())
 
     # Read the data from the input
     input = win.ui.teInput.toPlainText().split("\n")
