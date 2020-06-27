@@ -638,7 +638,7 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="resource.qrc">:/icons/eh.jpg</pixmap>
+          <pixmap resource="resource.qrc">:/icons/eh.png</pixmap>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
