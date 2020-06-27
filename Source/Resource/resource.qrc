@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>tclogo.png</file>
+    <file>icon.ico</file>
+    <file>eh.png</file>
+    <file>icon.png</file>
+  </qresource>
+</RCC>
