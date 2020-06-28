@@ -14,13 +14,22 @@
 #                                                                      Change Log.                                                                   #
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 '''
+------
 v1.01a
+------
 
-Updated images to have the same background as GUI instead of just black.
-Minor Python code refactoring and formatting.
+- Updated images to have the same background as GUI instead of just black.
 
+- Minor Python code refactoring and formatting.
+
+- Changed the Inpuit box so that it is now editable. The use can now copy to the clipboard and press convert 
+  OR paste to the input box for long reports spanning multiple pages. The Conver button log changed to reflect the user's selection.
+
+- Fixed a bug where Combat Rating and COOP/PVE Rating ranks weren't displaying properly.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
+------
 v1.00a
+------
 
 Initial build.
 '''
@@ -371,7 +380,7 @@ def processData():
         # -----Combat Rating-----
         elif "New Combat Rating achieved : " in line:
             result = line.split(" : ")[1]
-            combatText += "\nAchieved Combat Rating of	%s"%result.replace("\n", "")
+            combatText += "\nAchieved Combat Rating of %s"%result.replace("\n", "")
             misc += 1
             miscText += "\n1x point for achieving " + "Combat Rating of %s"%result.replace("\n", "")
 
@@ -379,7 +388,7 @@ def processData():
         # -----COOP/PVE Rating-----
         elif "New COOP/PVE Rating achieved : " in line:
             result = line.split(" : ")[1]
-            coopPVEText += "\nAchieved COOP/PVE Rating of	%s"%result.replace("\n", "")
+            coopPVEText += "\nAchieved COOP/PVE Rating of %s"%result.replace("\n", "")
             misc += 1
             miscText += "\n1x point for achieving " + "COOP/PVE Rating of %s"%result.replace("\n", "")
 
