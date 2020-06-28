@@ -22,10 +22,12 @@ v1.01a
 
 - Minor Python code refactoring and formatting.
 
-- Changed the Inpuit box so that it is now editable. The use can now copy to the clipboard and press convert 
+- Changed the Inpuit box so that it is now editable. The use can now copy to the clipboard and press convert
   OR paste to the input box for long reports spanning multiple pages. The Conver button log changed to reflect the user's selection.
 
 - Fixed a bug where Combat Rating and COOP/PVE Rating ranks weren't displaying properly.
+
+- Removed the old paste into input box and added combo boxes with a date range.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ------
 v1.00a
@@ -36,9 +38,9 @@ Initial build.
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 #                                                                      Imports.                                                                      #
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
-import sys, os
-import Tkinter as tk
+import sys, os, urllib, ConfigParser
 from PyQt4 import QtGui, QtCore, uic
+from bs4 import BeautifulSoup
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 
 
@@ -51,21 +53,36 @@ class SRRTApp(QtGui.QMainWindow):
 
         QtGui.QMainWindow.__init__(self)
 
+        # Config
+        self.config = ConfigParser.ConfigParser()
+        self.config.read("config.ini")
+
+        # Initialise instance variables.
+        self.squadrons = []
+        self.pilots = []
+
+        # GUI Setup.
         self.ui = uic.loadUi("Resource\SRRT.ui")
         self.ui.show()
 
-        # GUI Setup.
+        # Lock the text edits
         self.ui.teOutputWSR.setReadOnly(True)
         self.ui.teOutputMSE.setReadOnly(True)
         self.ui.teOutputMSEMisc.setReadOnly(True)
-        self.inputText = """1) Select your desired pilot's ATR.
-2) Highlight and copy all ATR activity for your desired date range.
-3) Click the 'Paste from Clipboard and Convert to Report' button.
 
---- OR ---
+        # Set the combo boxes.
+        self.getSquadrons()
+        try:
+            defaultSquad = self.ui.cbSquadrons.findText(self.config.get("settings", "defaultSquadron"))
+        except ConfigParser.NoSectionError:
+            defaultSquad = 0
 
-For longer ATR periods spanning multiple pages, paste directly into the 'Input' box and the click 'Convert to Report' button."""
-        self.ui.teInput.setText(self.inputText)
+        self.ui.cbSquadrons.setCurrentIndex(defaultSquad)
+        self.cbSquadronsFunc()
+
+        # Set the calendar dates.
+        self.ui.calEnd.showToday()
+        self.ui.calStart.setSelectedDate(self.ui.calEnd.selectedDate().addDays(-7))
 
         # GUI Connections.
         self.connect(self.ui.actionExit, QtCore.SIGNAL("triggered()"), closeApp)
@@ -73,8 +90,59 @@ For longer ATR periods spanning multiple pages, paste directly into the 'Input' 
         self.connect(self.ui.btnCopyWSR, QtCore.SIGNAL("clicked()"), copyWSR)
         self.connect(self.ui.btnCopyMSE, QtCore.SIGNAL("clicked()"), copyMSE)
         self.connect(self.ui.btnCopyMSEMisc, QtCore.SIGNAL("clicked()"), copyMSEMisc)
-        self.connect(self.ui.btnInputClear, QtCore.SIGNAL("clicked()"), btnInputClearFunc)
-        self.connect(self.ui.teInput, QtCore.SIGNAL("textChanged()"), teInputTextChanged)
+        self.ui.cbSquadrons.currentIndexChanged.connect(self.cbSquadronsFunc)
+        #--------------------------------------------------------------------------------------------------------------------------------------------#
+
+
+    def getSquadrons(self):
+        # Get squadron info from EHTC website.
+        html = urllib.urlopen("https://tc.emperorshammer.org/roster.php").read()
+        data = html.split(">Squadrons<")[1].split("daedalus.php")[0].split("type=sqn")
+        for squad in data:
+            if "Squadron" in squad:
+                info = squad.replace("&", "").split("</a>")[0].replace("id=", "").split('">')
+                self.squadrons.append(info)
+
+        # Add ther squadron names to the combo box.
+        for squad in self.squadrons:
+            self.ui.cbSquadrons.addItem(squad[1])
+        #--------------------------------------------------------------------------------------------------------------------------------------------#
+
+
+    def cbSquadronsFunc(self, value=None):
+
+        # Save the new selection as a default.
+        try:
+            self.config.add_section("settings")
+        except ConfigParser.DuplicateSectionError:
+            pass
+
+        self.config.set("settings", "defaultSquadron", self.ui.cbSquadrons.currentText())
+        with open("config.ini", "w") as configFile:
+            self.config.write(configFile)
+
+        # Set the pilots combo box to the squadron's pilots.
+        self.ui.cbPilots.clear()
+        for pilot in self.getPilots(self.ui.cbSquadrons.currentText()):
+            self.ui.cbPilots.addItem(pilot[1])
+        #--------------------------------------------------------------------------------------------------------------------------------------------#
+
+
+    def getPilots(self, strSquadron):
+        self.pilots = []
+        id = 0
+        for squad in self.squadrons:
+            if strSquadron == squad[1]:
+                id = squad[0]
+                break
+
+        html = urllib.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id)).read()
+        data = html.split("uniform patch")[1].split("SQUADRON CITATIONS EARNED")[0].split("<br>")
+
+        for line in data:
+            if "profile" in line:
+                self.pilots.append(line.split(".php?")[1].replace("</a>", "").split("</td>")[0].replace("pin=", "").split('&type=profile">'))
+        return self.pilots
         #--------------------------------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -128,23 +196,111 @@ def deselectAll():
 
 
 def btnInputClearFunc():
-    win.ui.teInput.clear()
     win.ui.teOutputWSR.clear()
     win.ui.teOutputMSE.clear()
     win.ui.teOutputMSEMisc.clear()
     #------------------------------------------------------------------------------------------------------------------------------------------------#
 
 
-def teInputTextChanged():
-    if win.ui.teInput.toPlainText() == win.inputText or win.ui.teInput.toPlainText() == "": 
-        win.ui.btnConvert.setText("Paste from Clipboard and Convert To Report")
-    else:
-        win.ui.btnConvert.setText("Convert Input Text To Report")
+def getTextListFromHtml(url):
+
+    html = urllib.urlopen(url).read()
+    soup = BeautifulSoup(html)
+
+    # kill all script and style elements
+    for script in soup(["script", "style"]):
+        script.extract()    # rip it out
+
+    # get text
+    text = soup.get_text()
+
+    # break into lines and remove leading and trailing space on each
+    lines = (line.strip() for line in text.splitlines())
+    # break multi-headlines into a line each
+    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+    # drop blank lines
+    text = '\n'.join(chunk for chunk in chunks if chunk)
+
+    return text
+    #------------------------------------------------------------------------------------------------------------------------------------------------#
+
+
+def getPilotActivityData(strName):
+    # Determine pilot Pin number.
+    pin = 0
+    for pilot in win.pilots:
+        if pilot[1] == strName:
+            pin = pilot[0]
+            break
+
+    # Retrieve the text from the EHTC website.
+    webPage = 0
+    endDateFound = False
+    startDateFound = False
+    output = []
+
+    while not (endDateFound and startDateFound):
+
+        if webPage == 0:
+            page = ""
+        else:
+            page = "&start=%s01"%str(webPage)
+
+        url = "https://tc.emperorshammer.org/record.php?pin={pin}&type=atr{page}".format(pin=pin, page=page)
+        text = getTextListFromHtml(url)
+
+        # Process the text for SRRT.
+        text = text.split("DateActivity")[1]
+
+        newText = ""
+        index = 0
+
+        for char in text:
+            if char.isdigit() and text[index + 1].isdigit() and text[index + 2] == "/" \
+               and text[index + 3].isdigit() and text[index + 4].isdigit() and text[index + 5] == "/" \
+               and text[index + 6].isdigit() and text[index + 7].isdigit() and text[index + 8].isdigit() and text[index + 9].isdigit():
+
+               newText += "NEWLINE" + char
+            else:
+                newText += char
+            index += 1
+
+        # Add a new line delimiter.
+        newText = newText.split("NEWLINE")
+        newText[-1] = newText[-1].split("Next ")[0] # Remove the Next / Previiout records line.
+
+        # Check that the dates meet our date range criteria.
+        startDate = win.ui.calStart.selectedDate()
+        endDate = win.ui.calEnd.selectedDate()
+
+        for line in newText:
+            # Convert the date in our line to a QDate for comparrison
+            if line != "\n":
+                lineDate =  line[:10].split("/")
+                lineDate = QtCore.QDate(int(lineDate[2]), int(lineDate[0]), int(lineDate[1]))
+
+                if lineDate <= endDate:
+                    endDateFound = True
+
+                if lineDate < startDate:
+                    startDateFound = True
+                    break # Stops adding earlier data
+
+            # Add the ATR data if it falls witrhin our date ranges.
+            if endDateFound and not startDateFound:
+                output.append(line)
+
+        if not endDateFound or not startDateFound:
+            webPage += 1
+
+    return output
     #------------------------------------------------------------------------------------------------------------------------------------------------#
 
 
 def processData():
     # Initialise variables.
+    endDateFound = False
+    startDateFound = False
     # Intergers
     lineIndex = 0
     spMissions = 0
@@ -191,299 +347,289 @@ def processData():
     inprUpdated = False
     inprText = ""
     miscText = ""
-	
-    # Determine if the data is in the clipboard or pasted into the Input box.
-    if win.ui.teInput.toPlainText() == win.inputText or win.ui.teInput.toPlainText() == "":
-        # Copy the data in from the clipboard.
-        root = tk.Tk()
-        win.ui.teInput.setText(root.clipboard_get())
 
-    # Read the data from the input
-    input = win.ui.teInput.toPlainText().split("\n")
-    data = []
-    for item in input:
-        data.append(str(item))
-
+    # Retrieve the pilots data for the selected pilot in the Pilots: comboBoz.
+    data = getPilotActivityData(win.ui.cbPilots.currentText())
 
 # ----------Parse the data for processing.----------
     for line in data:
+        if line != "\n":
 
-        # -----SP Missions-----
-        if "Battle completed : " in line and "mission" in line:
+            # -----SP Missions-----
+            if "Battle completed : " in line and "mission" in line:
 
-            # MSE Score.
-            result = line.split("(")[1]
-            result = result.split(" ")[0]
-            spMissions += int(result)
+                # MSE Score.
+                result = line.split("(")[1]
+                result = result.split(" ")[0]
+                spMissions += int(result)
 
-            # WSR Text.
+                # WSR Text.
+                    # Extract ther desired text e.g. TIE-TC 34
+                result = line.split(" : ")[1]
+                result = result.split(" (")[0]
+
+                if spMissiontext == "":
+                    spMissiontext = "\nFlown: " + result
+                else:
+                    spMissiontext += ", " + result
+
+
+            # -----Highscores-----
+            elif "highscore" in line.lower():
+                # Find the battle/mission completed in the previous line
+                sortieLine = data[lineIndex - 1]
+                sortieLine = sortieLine.split(" : ")[1]
+                sortieLine = sortieLine.split(" (")
+                battleName = sortieLine[0]
+
+                # Get the battle's mission count.
+                missions = ""
+                for char in sortieLine[1]:
+                    if char.isdigit():
+                        missions += char
+                    else:
+                        pass
+                battleMissions = int(missions)
+
+                if "mission" in line and "battle" in line:
+                    result = line.split(", ")
+                    missionHighscores = len(result)
+                    output = "\nAchieved the highscore in mission(s): "
+                    for char in line:
+                        if char.isdigit() or char == ",":
+                            output += char
+                    output += " of battle " + battleName + " and achieved the battle highscore"
+
+                    highscoreText += output
+                    battHScore += battleMissions
+                    missHScore += missionHighscores
+
+                elif "highscore(s)" in line.lower():
+                    result = line.split(", ")
+                    missionHighscores = len(result)
+                    output = "\nAchieved the highscore in mission(s): "
+                    for char in line:
+                        if char.isdigit() or char == ",":
+                            output += char
+                    output += " of battle " + battleName
+
+                    highscoreText += output
+                    missHScore += missionHighscores
+
+                elif "New mission highscore!" in line:
+                    output = "\nAchieved the highscore in " + battleName
+
+                    highscoreText += output
+                    missHScore += 1
+
+                # Error handling:
+                else:
+                    newData.append(line)
+                    unprocessed += line + "\n"
+
+
+            # -----LoCs-----
+            elif "of Combat" in line:
+
+                # Single Award:
+                if "Medal awarded : Legion of Combat (LoC)" in line:
+                    locs += 1
+
+                # Multi Award:
+                elif "Legions of Combat (LoCs)" in line:
+                    result = line.split(":")[1]
+                    result = result.split(" ")[1]
+                    locs += int(result)
+
+                # Error handling:
+                else:
+                    newData.append(line)
+                    unprocessed += line + "\n"
+
+
+            # -----LoSs-----
+            elif "of Skirmish" in line:
+
+                # Single award
+                if "Medal awarded : Legion of Skirmish (LoS)" in line:
+                    loss += 1
+
+                # Multi award
+                elif "Legions of Skirmish (LoSs)" in line:
+                    result = line.split(":")[1]
+                    result = result.split(" ")[1]
+                    loss += int(result)
+
+                # Error handling:
+                else:
+                    newData.append(line)
+                    unprocessed += line + "\n"
+
+
+            # -----Iron Stars-----
+            elif "Iron Star" in line:
+                result = line.split(" : ")[1]
+
+                # Platinum
+                if "Platinum" in result:
+                    if "Ribbon" in result:
+                        ISPR += 1
+                    elif "Wings" in result:
+                        ISPW += 1
+                    else:
+                        newData.append(line) # Error handling.
+                        unprocessed += line + "\n"
+
+                # Gold
+                elif "Gold" in result:
+                    if "Ribbon" in result:
+                        ISGR += 1
+                    elif "Wings" in result:
+                        ISGW += 1
+                    else:
+                        newData.append(line) # Error handling.
+                        unprocessed += line + "\n"
+
+                # Silver
+                elif "Silver" in result:
+                    if "Ribbon" in result:
+                        ISSR += 1
+                    elif "Wings" in result:
+                        ISSW += 1
+                    else:
+                        newData.append(line) # Error handling.
+                        unprocessed += line + "\n"
+
+                # Bronze
+                elif "Bronze" in result:
+                    if "Ribbon" in result:
+                        ISBR += 1
+                    elif "Wings" in result:
+                        ISBW += 1
+                    else:
+                        newData.append(line) # Error handling.
+                        unprocessed += line + "\n"
+
+                # Re-add the line to Output.txt if we can't detect the award.
+                else:
+                    newData.append(line)
+                    unprocessed += line + "\n"
+
+
+            # -----FCHG Rating-----
+            elif "New Fleet Commander's Honor Guard rank achieved : " in line:
+                result = line.split(" : ")[1]
+                fchgText += "\nAchieved Fleet Commander's Honor Guard rank of %s"%result.replace("\n", "")
+                misc += 1
+                miscText += "\n1x point for achieving " + "FCHG rank of %s"%result.replace("\n", "")
+
+
+            # -----Combat Rating-----
+            elif "New Combat Rating achieved : " in line:
+                result = line.split(" : ")[1]
+                combatText += "\nAchieved Combat Rating of %s"%result.replace("\n", "")
+                misc += 1
+                miscText += "\n1x point for achieving " + "Combat Rating of %s"%result.replace("\n", "")
+
+
+            # -----COOP/PVE Rating-----
+            elif "New COOP/PVE Rating achieved : " in line:
+                result = line.split(" : ")[1]
+                coopPVEText += "\nAchieved COOP/PVE Rating of %s"%result.replace("\n", "")
+                misc += 1
+                miscText += "\n1x point for achieving " + "COOP/PVE Rating of %s"%result.replace("\n", "")
+
+
+            # -----Uniform Update-----
+            elif "New uniform upload approved" in line:
+                if not uniformUpdated:
+                    uniformText = "\nUpdated their uniform"
+                    misc += 1
+                    uniformUpdated = True
+
+
+            # -----INPR Update-----
+            elif "Updated Imperial Navy Personnel Record (INPR)" in line:
+                if not inprUpdated:
+                    inprText = "\nUpdated their Imperial Navy Personnel Record (INPR)"
+                    misc += 1
+                    inprUpdated = True
+
+
+            # -----Mission reviews-----
+            elif "Submitted bug report" in line:
+
                 # Extract ther desired text e.g. TIE-TC 34
-            result = line.split(" : ")[1]
-            result = result.split(" (")[0]
+                result = line.split("battle ")[1]
 
-            if spMissiontext == "":
-                spMissiontext = "\nFlown: " + result
-            else:
-                spMissiontext += ", " + result
-
-
-        # -----Highscores-----
-        elif "highscore" in line.lower():
-            # Find the battle/mission completed in the previous line
-            sortieLine = data[lineIndex - 1]
-            sortieLine = sortieLine.split(" : ")[1]
-            sortieLine = sortieLine.split(" (")
-            battleName = sortieLine[0]
-
-            # Get the battle's mission count.
-            missions = ""
-            for char in sortieLine[1]:
-                if char.isdigit():
-                    missions += char
+                if bugReportText == "":
+                    bugReportText = "\nWrote a bug report for: " + result.replace("\n", "").replace("\t", "").replace(" ", "")
                 else:
-                    pass
-            battleMissions = int(missions)
+                    bugReportText += ", " + result.replace("\n", "").replace("\t", "").replace(" ", "")
 
-            if "mission" in line and "battle" in line:
-                result = line.split(", ")
-                missionHighscores = len(result)
-                output = "\nAchieved the highscore in mission(s): "
-                for char in line:
-                    if char.isdigit() or char == ",":
-                        output += char
-                output += " of battle " + battleName + " and achieved the battle highscore"
-
-                highscoreText += output
-                battHScore += battleMissions
-                missHScore += missionHighscores
-
-            elif "highscore(s)" in line.lower():
-                result = line.split(", ")
-                missionHighscores = len(result)
-                output = "\nAchieved the highscore in mission(s): "
-                for char in line:
-                    if char.isdigit() or char == ",":
-                        output += char
-                output += " of battle " + battleName
-
-                highscoreText += output
-                missHScore += missionHighscores
-
-            elif "New mission highscore!" in line:
-                output = "\nAchieved the highscore in " + battleName
-
-                highscoreText += output
-                missHScore += 1
-
-            # Error handling:
-            else:
-                newData.append(line)
-                unprocessed += line + "\n"
-
-
-        # -----LoCs-----
-        elif "of Combat" in line:
-
-            # Single Award:
-            if "Medal awarded : Legion of Combat (LoC)" in line:
-                locs += 1
-
-            # Multi Award:
-            elif "Legions of Combat (LoCs)" in line:
-                result = line.split(":")[1]
-                result = result.split(" ")[1]
-                locs += int(result)
-
-            # Error handling:
-            else:
-                newData.append(line)
-                unprocessed += line + "\n"
-
-
-        # -----LoSs-----
-        elif "of Skirmish" in line:
-
-            # Single award
-            if "Medal awarded : Legion of Skirmish (LoS)" in line:
-                loss += 1
-
-            # Multi award
-            elif "Legions of Skirmish (LoSs)" in line:
-                result = line.split(":")[1]
-                result = result.split(" ")[1]
-                loss += int(result)
-
-            # Error handling:
-            else:
-                newData.append(line)
-                unprocessed += line + "\n"
-
-
-        # -----Iron Stars-----
-        elif "Iron Star" in line:
-            result = line.split(" : ")[1]
-
-            # Platinum
-            if "Platinum" in result:
-                if "Ribbon" in result:
-                    ISPR += 1
-                elif "Wings" in result:
-                    ISPW += 1
-                else:
-                    newData.append(line) # Error handling.
-                    unprocessed += line + "\n"
-
-            # Gold
-            elif "Gold" in result:
-                if "Ribbon" in result:
-                    ISGR += 1
-                elif "Wings" in result:
-                    ISGW += 1
-                else:
-                    newData.append(line) # Error handling.
-                    unprocessed += line + "\n"
-
-            # Silver
-            elif "Silver" in result:
-                if "Ribbon" in result:
-                    ISSR += 1
-                elif "Wings" in result:
-                    ISSW += 1
-                else:
-                    newData.append(line) # Error handling.
-                    unprocessed += line + "\n"
-
-            # Bronze
-            elif "Bronze" in result:
-                if "Ribbon" in result:
-                    ISBR += 1
-                elif "Wings" in result:
-                    ISBW += 1
-                else:
-                    newData.append(line) # Error handling.
-                    unprocessed += line + "\n"
-
-            # Re-add the line to Output.txt if we can't detect the award.
-            else:
-                newData.append(line)
-                unprocessed += line + "\n"
-
-
-        # -----FCHG Rating-----
-        elif "New Fleet Commander's Honor Guard rank achieved : " in line:
-            result = line.split(" : ")[1]
-            fchgText += "\nAchieved Fleet Commander's Honor Guard rank of %s"%result.replace("\n", "")
-            misc += 1
-            miscText += "\n1x point for achieving " + "FCHG rank of %s"%result.replace("\n", "")
-
-
-        # -----Combat Rating-----
-        elif "New Combat Rating achieved : " in line:
-            result = line.split(" : ")[1]
-            combatText += "\nAchieved Combat Rating of %s"%result.replace("\n", "")
-            misc += 1
-            miscText += "\n1x point for achieving " + "Combat Rating of %s"%result.replace("\n", "")
-
-
-        # -----COOP/PVE Rating-----
-        elif "New COOP/PVE Rating achieved : " in line:
-            result = line.split(" : ")[1]
-            coopPVEText += "\nAchieved COOP/PVE Rating of %s"%result.replace("\n", "")
-            misc += 1
-            miscText += "\n1x point for achieving " + "COOP/PVE Rating of %s"%result.replace("\n", "")
-
-
-        # -----Uniform Update-----
-        elif "New uniform upload approved" in line:
-            if not uniformUpdated:
-                uniformText = "\nUpdated their uniform"
+                bugReports += 1
                 misc += 1
-                uniformUpdated = True
 
 
-        # -----INPR Update-----
-        elif "Updated Imperial Navy Personnel Record (INPR)" in line:
-            if not inprUpdated:
-                inprText = "\nUpdated their Imperial Navy Personnel Record (INPR)"
+            # -----Mission Bug Reports-----
+            elif "Submitted review for battle" in line:
+
+                # Extract ther desired text e.g. TIE-TC 34
+                result = line.split("battle ")[1]
+
+                if reviewText == "":
+                    reviewText = "\nWrote reviews for: " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+                else:
+                    reviewText += ", " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+
+                reviews += 1
                 misc += 1
-                inprUpdated = True
 
 
-        # -----Mission reviews-----
-        elif "Submitted bug report" in line:
+            # -----Other Medals-----
+            elif "Medal awarded : " in line:
+                result = line.split(" : ")[1].replace("\n", "")
+                if result not in medals:
+                    medals[result] = 1
+                else:
+                    medals[result] += 1
 
-            # Extract ther desired text e.g. TIE-TC 34
-            result = line.split("battle ")[1]
 
-            if bugReportText == "":
-                bugReportText = "\nWrote a bug report for: " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+            # -----Promotions-----
+            elif "new rank set " in line.lower() or "new promotion : " in line.lower():
+                result = line.split(" : ")[1].replace("\n", "")
+                promotionText += "\nPromoted to the rank of %s"%result
+
+
+            # -----Assignments-----
+            elif "New assignment :" in line:
+                result = line.split(":")[1]
+                assignmentText = "\nAssigned to: " + result.replace("\n", "")
+
+
+            # -----IWATS Courses.-----
+            elif "IWATS Course added to Academic Record" in line:
+                results = line.split(" : ")[1].split(" - ")
+                iwatsText += "\nCompleted the IWATS/Imp U %s course with a score of %s"%(results[0], results [1].replace("\n", ""))
+                iwats += 1
+                misc += 1
+
+
+            # -----Reports-----
+            elif "Submitted a new" in line and "report" in line:
+                reports += 1
+                reportsDatabased += 1
+
+
+            # Write un proccessed lines back to the New Data.txt file.
             else:
-                bugReportText += ", " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+                if line != "":
+                    newData.append(line)
+                    unprocessed += line + "\n"
 
-            bugReports += 1
-            misc += 1
-
-
-        # -----Mission Bug Reports-----
-        elif "Submitted review for battle" in line:
-
-            # Extract ther desired text e.g. TIE-TC 34
-            result = line.split("battle ")[1]
-
-            if reviewText == "":
-                reviewText = "\nWrote reviews for: " + result.replace("\n", "").replace("\t", "").replace(" ", "")
-            else:
-                reviewText += ", " + result.replace("\n", "").replace("\t", "").replace(" ", "")
-
-            reviews += 1
-            misc += 1
-
-
-        # -----Other Medals-----
-        elif "Medal awarded : " in line:
-            result = line.split(" : ")[1].replace("\n", "")
-            if result not in medals:
-                medals[result] = 1
-            else:
-                medals[result] += 1
-
-
-        # -----Promotions-----
-        elif "new rank set " in line.lower() or "new promotion : " in line.lower():
-            result = line.split(" : ")[1].replace("\n", "")
-            promotionText += "\nPromoted to the rank of %s"%result
-
-
-        # -----Assignments-----
-        elif "New assignment :" in line:
-            result = lineIndex + 1
-            assignmentText = "\nAssigned to: " + data[result].replace("\n", "")
-            data[result] = "" # Erases the assignment data so it isn't shown as unprocessed in Output.txt
-
-
-        # -----IWATS Courses.-----
-        elif "IWATS Course added to Academic Record" in line:
-            results = line.split(" : ")[1].split(" - ")
-            iwatsText += "\nCompleted the IWATS/Imp U %s course with a score of %s"%(results[0], results [1].replace("\n", ""))
-            iwats += 1
-            misc += 1
-
-
-        # -----Reports-----
-        elif "Submitted a new" in line and "report" in line:
-            reports += 1
-            reportsDatabased += 1
-
-
-        # Write un proccessed lines back to the New Data.txt file.
-        else:
-            if line != "":
-                newData.append(line)
-                unprocessed += line + "\n"
-
-        # Increment the Input.txt index counter.
-        lineIndex += 1
-    # --------------------------------------------------
+            # Increment the Input.txt index counter.
+            lineIndex += 1
+        # --------------------------------------------------
 
 
     # ----------Monthly Squadron Evaluation Line.----------
