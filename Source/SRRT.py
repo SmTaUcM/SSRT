@@ -15,25 +15,30 @@
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 '''
 ------
+vCURRENT WORK IN PROGRESS
+------
+
+- BugFix - Reviews not spacing out coprrectly due to web rip.
+- BugFix - Bug Reports not spacint out correctly due to web rip
+- BugFig - Highscores of any kind not being displayed and counting incorrectly
+- BugFix - Battles with highscores not being counted
+------------------------------------------------------------------------------------------------------------------------------------------------------
+------
 v1.01a
 ------
 
 - Updated images to have the same background as GUI instead of just black.
-
 - Minor Python code refactoring and formatting.
-
 - Changed the Inpuit box so that it is now editable. The use can now copy to the clipboard and press convert
   OR paste to the input box for long reports spanning multiple pages. The Conver button log changed to reflect the user's selection.
-
 - Fixed a bug where Combat Rating and COOP/PVE Rating ranks weren't displaying properly.
-
 - Removed the old paste into input box and added combo boxes with a date range.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ------
 v1.00a
 ------
 
-Initial build.
+-Initial build.
 '''
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 #                                                                      Imports.                                                                      #
@@ -286,7 +291,7 @@ def getPilotActivityData(strName):
                     startDateFound = True
                     break # Stops adding earlier data
 
-            # Add the ATR data if it falls witrhin our date ranges.
+            # Add the ATR data if it falls within our date ranges.
             if endDateFound and not startDateFound:
                 output.append(line)
 
@@ -298,6 +303,9 @@ def getPilotActivityData(strName):
 
 
 def processData():
+	# Disable the 'Convert button
+    win.ui.btnConvert.setEnabled(False)
+
     # Initialise variables.
     endDateFound = False
     startDateFound = False
@@ -374,58 +382,61 @@ def processData():
                     spMissiontext += ", " + result
 
 
-            # -----Highscores-----
-            elif "highscore" in line.lower():
-                # Find the battle/mission completed in the previous line
-                sortieLine = data[lineIndex - 1]
-                sortieLine = sortieLine.split(" : ")[1]
-                sortieLine = sortieLine.split(" (")
-                battleName = sortieLine[0]
+                # -----Highscores-----
+                if "highscore" in line.lower():
+                    # Find the battle/mission completed in the previous line
+                    sortieLine = line
+                    sortieLine = sortieLine.split(" : ")[1]
+                    sortieLine = sortieLine.split(" (")
+                    battleName = sortieLine[0]
 
-                # Get the battle's mission count.
-                missions = ""
-                for char in sortieLine[1]:
-                    if char.isdigit():
-                        missions += char
+                    # Get the battle's mission count.
+                    missions = ""
+                    for char in sortieLine[1].split(")")[0]:
+                        if char.isdigit():
+                            missions += char
+                        else:
+                            pass
+                    battleMissions = int(missions)
+
+                    # Battle and battle mission highscores.
+                    if "mission" in line and "battle" in line:
+                        result = line.split(", ")
+                        missionHighscores = len(result)
+                        output = "\nAchieved the highscore in mission(s): "
+                        for char in line.split("missions")[1]:
+                            if char.isdigit() or char == ",":
+                                output += char
+                        output += " of battle " + battleName + " and achieved the battle highscore"
+
+                        highscoreText += output
+                        battHScore += battleMissions
+                        missHScore += missionHighscores
+
+                    # battle mission highscores.
+                    elif "highscore(s)" in line.lower():
+                        result = line.split(", ")
+                        missionHighscores = len(result)
+                        output = "\nAchieved the highscore in mission(s): "
+                        for char in line.split("missions")[1]:
+                            if char.isdigit() or char == ",":
+                                output += char
+                        output += " of battle " + battleName
+
+                        highscoreText += output
+                        missHScore += missionHighscores
+
+                    # -free mission highscores.
+                    elif "New mission highscore!" in line:
+                        output = "\nAchieved the highscore in " + battleName
+
+                        highscoreText += output
+                        missHScore += 1
+
+                    # Error handling:
                     else:
-                        pass
-                battleMissions = int(missions)
-
-                if "mission" in line and "battle" in line:
-                    result = line.split(", ")
-                    missionHighscores = len(result)
-                    output = "\nAchieved the highscore in mission(s): "
-                    for char in line:
-                        if char.isdigit() or char == ",":
-                            output += char
-                    output += " of battle " + battleName + " and achieved the battle highscore"
-
-                    highscoreText += output
-                    battHScore += battleMissions
-                    missHScore += missionHighscores
-
-                elif "highscore(s)" in line.lower():
-                    result = line.split(", ")
-                    missionHighscores = len(result)
-                    output = "\nAchieved the highscore in mission(s): "
-                    for char in line:
-                        if char.isdigit() or char == ",":
-                            output += char
-                    output += " of battle " + battleName
-
-                    highscoreText += output
-                    missHScore += missionHighscores
-
-                elif "New mission highscore!" in line:
-                    output = "\nAchieved the highscore in " + battleName
-
-                    highscoreText += output
-                    missHScore += 1
-
-                # Error handling:
-                else:
-                    newData.append(line)
-                    unprocessed += line + "\n"
+                        newData.append(line)
+                        unprocessed += line + "\n"
 
 
             # -----LoCs-----
@@ -562,10 +573,16 @@ def processData():
                 # Extract ther desired text e.g. TIE-TC 34
                 result = line.split("battle ")[1]
 
+                # Handle unwanted trailing ASCII characters left over for the website rip.
+                refinedResullt = ""
+                for i in result:
+                    if i.isalnum() or i == "-" or i == " ":
+                        refinedResullt += i
+
                 if bugReportText == "":
-                    bugReportText = "\nWrote a bug report for: " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+                    bugReportText = "\nWrote a bug report for: " + refinedResullt
                 else:
-                    bugReportText += ", " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+                    bugReportText += ", " + refinedResullt
 
                 bugReports += 1
                 misc += 1
@@ -576,7 +593,7 @@ def processData():
 
                 # Extract ther desired text e.g. TIE-TC 34
                 result = line.split("battle ")[1]
-				
+
 				# Handle unwanted trailing ASCII characters left over for the website rip.
                 refinedResullt = ""
                 for i in result:
@@ -738,6 +755,9 @@ def processData():
     win.ui.teOutputWSR.setText(wsrLine + unprocOut)
     win.ui.teOutputMSE.setText(scoreLine)
     win.ui.teOutputMSEMisc.setText(miscText[1:])
+
+    # Enable the 'Convert button
+    win.ui.btnConvert.setEnabled(True)
     #------------------------------------------------------------------------------------------------------------------------------------------------#
 
 
