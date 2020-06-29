@@ -556,7 +556,7 @@ def processData():
                     inprUpdated = True
 
 
-            # -----Mission reviews-----
+            # -----Mission Bug Reports-----
             elif "Submitted bug report" in line:
 
                 # Extract ther desired text e.g. TIE-TC 34
@@ -571,16 +571,23 @@ def processData():
                 misc += 1
 
 
-            # -----Mission Bug Reports-----
+			# -----Mission reviews-----
             elif "Submitted review for battle" in line:
 
                 # Extract ther desired text e.g. TIE-TC 34
                 result = line.split("battle ")[1]
+				
+				# Handle unwanted trailing ASCII characters left over for the website rip.
+                refinedResullt = ""
+                for i in result:
+                    if i.isalnum() or i == "-" or i == " ":
+                        refinedResullt += i
 
+				# Set the text.
                 if reviewText == "":
-                    reviewText = "\nWrote reviews for: " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+                    reviewText = "\nWrote reviews for: " + refinedResullt
                 else:
-                    reviewText += ", " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+                    reviewText += ", " + refinedResullt
 
                 reviews += 1
                 misc += 1
