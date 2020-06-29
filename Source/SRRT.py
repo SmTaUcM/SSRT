@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 '''#-------------------------------------------------------------------------------------------------------------------------------------------------#
 # Name:        SkyShadow's Rapid Reporting Tool (SRRT.py)
 # Purpose:     Rapidy produces WSR and MSE reports and saves them in the clipboard.
-# Version:     v1.01a
+# Version:     v1.02a
 # Author:      Stuart Macintosh, SkyShadow
 #
-# Created:     27/06/2020
+# Created:     29/06/2020
 # Copyright:   Open Source
 # Licence:     GNU
 #-------------------------------------------------------------------------------------------------------------------------------------------------#'''
@@ -15,7 +14,7 @@
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 '''
 ------
-vCURRENT WORK IN PROGRESS
+v1.02a
 ------
 
 - BugFix - Reviews not spacing out coprrectly due to web rip.
