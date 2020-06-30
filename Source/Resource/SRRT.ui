@@ -866,7 +866,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Date: 29 June 2020</string>
+          <string>Date: 30 June 2020</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
