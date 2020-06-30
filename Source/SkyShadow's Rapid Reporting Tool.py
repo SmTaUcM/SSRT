@@ -23,6 +23,7 @@ v1.02a
 - BugFix - Battles with highscores not being counted
 - BugFix - Eliminated the Windows console showing when SRRT.exe is running.
 - BugFix - Output text is too small.
+- Feature - Icon added to .exe file.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ------
 v1.01a
@@ -77,7 +78,7 @@ class SRRTApp(QtGui.QMainWindow):
         self.pilots = []
 
         # GUI Setup.
-        self.ui = uic.loadUi("Resource\SRRT.ui")
+        self.ui = uic.loadUi("srrt.ui")
         self.ui.show()
 
         # Lock the text edits

@@ -7,4 +7,12 @@
 from distutils.core import setup
 import py2exe
 
-setup(windows=["C:\Users\smtau\Desktop\SkyShadow's Rapid Reporting Tool\Source\SRRT.py"])
+setup(
+      windows=
+              [
+               {
+                "script": "C:\Users\smtau\Desktop\SkyShadow's Rapid Reporting Tool\Source\SkyShadow's Rapid Reporting Tool.py",
+                "icon_resources" : [(0, "C:\Users\smtau\Desktop\SkyShadow's Rapid Reporting Tool\Source\Resource\icon.ico")]
+               }
+              ],
+      )
