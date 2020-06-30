@@ -22,6 +22,7 @@ v1.02a
 - BugFig - Highscores of any kind not being displayed and counting incorrectly
 - BugFix - Battles with highscores not being counted
 - BugFix - Eliminated the Windows console showing when SRRT.exe is running.
+- BugFix - Output text is too small.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ------
 v1.01a

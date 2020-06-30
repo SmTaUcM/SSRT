@@ -1023,7 +1023,7 @@ color: rgb(64, 64, 64);
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>8</pointsize>
+           <pointsize>12</pointsize>
            <weight>50</weight>
            <bold>false</bold>
            <underline>false</underline>
@@ -1090,7 +1090,7 @@ color: rgb(64, 64, 64);
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>8</pointsize>
+           <pointsize>12</pointsize>
            <weight>50</weight>
            <bold>false</bold>
            <underline>false</underline>
@@ -1131,7 +1131,7 @@ color: rgb(64, 64, 64);
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>8</pointsize>
+           <pointsize>6</pointsize>
            <weight>50</weight>
            <bold>false</bold>
            <underline>false</underline>
