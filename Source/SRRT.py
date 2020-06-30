@@ -21,6 +21,7 @@ v1.02a
 - BugFix - Bug Reports not spacint out correctly due to web rip
 - BugFig - Highscores of any kind not being displayed and counting incorrectly
 - BugFix - Battles with highscores not being counted
+- BugFix - Eliminated the Windows console showing when SRRT.exe is running.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ------
 v1.01a
@@ -45,12 +46,21 @@ v1.00a
 import sys, os, urllib, ConfigParser
 from PyQt4 import QtGui, QtCore, uic
 from bs4 import BeautifulSoup
+import pkgutil
+import soupsieve
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 #                                                                      Classes.                                                                      #
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
+class NullDevice():
+    '''A object class used to inhibit the SDTOUT/STDERR.'''
+
+    def write(self, s):
+        pass
+    #------------------------------------------------------------------------------------------------------------------------------------------------#
+
 class SRRTApp(QtGui.QMainWindow):
 
     def __init__(self):
@@ -5940,6 +5950,10 @@ qt_resource_struct = "\
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 #                                                                     Main Program.                                                                  #
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
+# Inhibit the STDOUT and STDERR so we don't get the annoying pop up window when we close the app.
+sys.stdout = NullDevice()
+sys.stderr = NullDevice()
+
 qInitResources()
 
 if __name__ == "__main__":

@@ -7,4 +7,4 @@
 from distutils.core import setup
 import py2exe
 
-setup(console=["C:\Users\smtau\Desktop\SkyShadow's Rapid Reporting Tool\Source\SRRT.py"])
+setup(windows=["C:\Users\smtau\Desktop\SkyShadow's Rapid Reporting Tool\Source\SRRT.py"])
