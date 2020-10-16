@@ -810,7 +810,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>SkyShadow's Rapid Reporting Tool Alpha 1</string>
+          <string>SkyShadow's Rapid Reporting Tool v1.02 Alpha</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -843,7 +843,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Version : 1.01a</string>
+          <string>Version : 1.02a</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -866,7 +866,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Date: 27 June 2020</string>
+          <string>Date: 30 June 2020</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1023,7 +1023,7 @@ color: rgb(64, 64, 64);
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>8</pointsize>
+           <pointsize>12</pointsize>
            <weight>50</weight>
            <bold>false</bold>
            <underline>false</underline>
@@ -1090,7 +1090,7 @@ color: rgb(64, 64, 64);
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>8</pointsize>
+           <pointsize>12</pointsize>
            <weight>50</weight>
            <bold>false</bold>
            <underline>false</underline>
@@ -1131,7 +1131,7 @@ color: rgb(64, 64, 64);
          <property name="font">
           <font>
            <family>Arial</family>
-           <pointsize>8</pointsize>
+           <pointsize>6</pointsize>
            <weight>50</weight>
            <bold>false</bold>
            <underline>false</underline>

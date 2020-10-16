@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 '''#-------------------------------------------------------------------------------------------------------------------------------------------------#
 # Name:        SkyShadow's Rapid Reporting Tool (SRRT.py)
 # Purpose:     Rapidy produces WSR and MSE reports and saves them in the clipboard.
-# Version:     v1.01a
+# Version:     v1.02a
 # Author:      Stuart Macintosh, SkyShadow
 #
-# Created:     27/06/2020
+# Created:     29/06/2020
 # Copyright:   Open Source
 # Licence:     GNU
 #-------------------------------------------------------------------------------------------------------------------------------------------------#'''
@@ -15,25 +14,33 @@
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 '''
 ------
+v1.02a
+------
+
+- BugFix - Reviews not spacing out coprrectly due to web rip.
+- BugFix - Bug Reports not spacint out correctly due to web rip
+- BugFig - Highscores of any kind not being displayed and counting incorrectly
+- BugFix - Battles with highscores not being counted
+- BugFix - Eliminated the Windows console showing when SRRT.exe is running.
+- BugFix - Output text is too small.
+- Feature - Icon added to .exe file.
+------------------------------------------------------------------------------------------------------------------------------------------------------
+------
 v1.01a
 ------
 
 - Updated images to have the same background as GUI instead of just black.
-
 - Minor Python code refactoring and formatting.
-
 - Changed the Inpuit box so that it is now editable. The use can now copy to the clipboard and press convert
   OR paste to the input box for long reports spanning multiple pages. The Conver button log changed to reflect the user's selection.
-
 - Fixed a bug where Combat Rating and COOP/PVE Rating ranks weren't displaying properly.
-
 - Removed the old paste into input box and added combo boxes with a date range.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ------
 v1.00a
 ------
 
-Initial build.
+-Initial build.
 '''
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 #                                                                      Imports.                                                                      #
@@ -41,12 +48,21 @@ Initial build.
 import sys, os, urllib, ConfigParser
 from PyQt4 import QtGui, QtCore, uic
 from bs4 import BeautifulSoup
+import pkgutil
+import soupsieve
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 #                                                                      Classes.                                                                      #
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
+class NullDevice():
+    '''A object class used to inhibit the SDTOUT/STDERR.'''
+
+    def write(self, s):
+        pass
+    #------------------------------------------------------------------------------------------------------------------------------------------------#
+
 class SRRTApp(QtGui.QMainWindow):
 
     def __init__(self):
@@ -62,7 +78,7 @@ class SRRTApp(QtGui.QMainWindow):
         self.pilots = []
 
         # GUI Setup.
-        self.ui = uic.loadUi("Resource\SRRT.ui")
+        self.ui = uic.loadUi("srrt.ui")
         self.ui.show()
 
         # Lock the text edits
@@ -286,7 +302,7 @@ def getPilotActivityData(strName):
                     startDateFound = True
                     break # Stops adding earlier data
 
-            # Add the ATR data if it falls witrhin our date ranges.
+            # Add the ATR data if it falls within our date ranges.
             if endDateFound and not startDateFound:
                 output.append(line)
 
@@ -298,6 +314,9 @@ def getPilotActivityData(strName):
 
 
 def processData():
+	# Disable the 'Convert button
+    win.ui.btnConvert.setEnabled(False)
+
     # Initialise variables.
     endDateFound = False
     startDateFound = False
@@ -374,58 +393,61 @@ def processData():
                     spMissiontext += ", " + result
 
 
-            # -----Highscores-----
-            elif "highscore" in line.lower():
-                # Find the battle/mission completed in the previous line
-                sortieLine = data[lineIndex - 1]
-                sortieLine = sortieLine.split(" : ")[1]
-                sortieLine = sortieLine.split(" (")
-                battleName = sortieLine[0]
+                # -----Highscores-----
+                if "highscore" in line.lower():
+                    # Find the battle/mission completed in the previous line
+                    sortieLine = line
+                    sortieLine = sortieLine.split(" : ")[1]
+                    sortieLine = sortieLine.split(" (")
+                    battleName = sortieLine[0]
 
-                # Get the battle's mission count.
-                missions = ""
-                for char in sortieLine[1]:
-                    if char.isdigit():
-                        missions += char
+                    # Get the battle's mission count.
+                    missions = ""
+                    for char in sortieLine[1].split(")")[0]:
+                        if char.isdigit():
+                            missions += char
+                        else:
+                            pass
+                    battleMissions = int(missions)
+
+                    # Battle and battle mission highscores.
+                    if "mission" in line and "battle" in line:
+                        result = line.split(", ")
+                        missionHighscores = len(result)
+                        output = "\nAchieved the highscore in mission(s): "
+                        for char in line.split("missions")[1]:
+                            if char.isdigit() or char == ",":
+                                output += char
+                        output += " of battle " + battleName + " and achieved the battle highscore"
+
+                        highscoreText += output
+                        battHScore += battleMissions
+                        missHScore += missionHighscores
+
+                    # battle mission highscores.
+                    elif "highscore(s)" in line.lower():
+                        result = line.split(", ")
+                        missionHighscores = len(result)
+                        output = "\nAchieved the highscore in mission(s): "
+                        for char in line.split("missions")[1]:
+                            if char.isdigit() or char == ",":
+                                output += char
+                        output += " of battle " + battleName
+
+                        highscoreText += output
+                        missHScore += missionHighscores
+
+                    # -free mission highscores.
+                    elif "New mission highscore!" in line:
+                        output = "\nAchieved the highscore in " + battleName
+
+                        highscoreText += output
+                        missHScore += 1
+
+                    # Error handling:
                     else:
-                        pass
-                battleMissions = int(missions)
-
-                if "mission" in line and "battle" in line:
-                    result = line.split(", ")
-                    missionHighscores = len(result)
-                    output = "\nAchieved the highscore in mission(s): "
-                    for char in line:
-                        if char.isdigit() or char == ",":
-                            output += char
-                    output += " of battle " + battleName + " and achieved the battle highscore"
-
-                    highscoreText += output
-                    battHScore += battleMissions
-                    missHScore += missionHighscores
-
-                elif "highscore(s)" in line.lower():
-                    result = line.split(", ")
-                    missionHighscores = len(result)
-                    output = "\nAchieved the highscore in mission(s): "
-                    for char in line:
-                        if char.isdigit() or char == ",":
-                            output += char
-                    output += " of battle " + battleName
-
-                    highscoreText += output
-                    missHScore += missionHighscores
-
-                elif "New mission highscore!" in line:
-                    output = "\nAchieved the highscore in " + battleName
-
-                    highscoreText += output
-                    missHScore += 1
-
-                # Error handling:
-                else:
-                    newData.append(line)
-                    unprocessed += line + "\n"
+                        newData.append(line)
+                        unprocessed += line + "\n"
 
 
             # -----LoCs-----
@@ -556,31 +578,44 @@ def processData():
                     inprUpdated = True
 
 
-            # -----Mission reviews-----
+            # -----Mission Bug Reports-----
             elif "Submitted bug report" in line:
 
                 # Extract ther desired text e.g. TIE-TC 34
                 result = line.split("battle ")[1]
 
+                # Handle unwanted trailing ASCII characters left over for the website rip.
+                refinedResullt = ""
+                for i in result:
+                    if i.isalnum() or i == "-" or i == " ":
+                        refinedResullt += i
+
                 if bugReportText == "":
-                    bugReportText = "\nWrote a bug report for: " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+                    bugReportText = "\nWrote a bug report for: " + refinedResullt
                 else:
-                    bugReportText += ", " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+                    bugReportText += ", " + refinedResullt
 
                 bugReports += 1
                 misc += 1
 
 
-            # -----Mission Bug Reports-----
+			# -----Mission reviews-----
             elif "Submitted review for battle" in line:
 
                 # Extract ther desired text e.g. TIE-TC 34
                 result = line.split("battle ")[1]
 
+				# Handle unwanted trailing ASCII characters left over for the website rip.
+                refinedResullt = ""
+                for i in result:
+                    if i.isalnum() or i == "-" or i == " ":
+                        refinedResullt += i
+
+				# Set the text.
                 if reviewText == "":
-                    reviewText = "\nWrote reviews for: " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+                    reviewText = "\nWrote reviews for: " + refinedResullt
                 else:
-                    reviewText += ", " + result.replace("\n", "").replace("\t", "").replace(" ", "")
+                    reviewText += ", " + refinedResullt
 
                 reviews += 1
                 misc += 1
@@ -731,6 +766,9 @@ def processData():
     win.ui.teOutputWSR.setText(wsrLine + unprocOut)
     win.ui.teOutputMSE.setText(scoreLine)
     win.ui.teOutputMSEMisc.setText(miscText[1:])
+
+    # Enable the 'Convert button
+    win.ui.btnConvert.setEnabled(True)
     #------------------------------------------------------------------------------------------------------------------------------------------------#
 
 
@@ -5914,6 +5952,10 @@ qt_resource_struct = "\
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 #                                                                     Main Program.                                                                  #
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
+# Inhibit the STDOUT and STDERR so we don't get the annoying pop up window when we close the app.
+sys.stdout = NullDevice()
+sys.stderr = NullDevice()
+
 qInitResources()
 
 if __name__ == "__main__":
