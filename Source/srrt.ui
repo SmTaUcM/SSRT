@@ -14,7 +14,7 @@
    <string>SkyShadow's Rapid Reporting Tool</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resource.qrc">
+   <iconset resource="Resource/resource.qrc">
     <normaloff>:/icons/icon.png</normaloff>:/icons/icon.png</iconset>
   </property>
   <property name="styleSheet">
@@ -767,7 +767,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Created CM SkyShadow</string>
+          <string>Created LCM SkyShadow</string>
          </property>
         </widget>
        </item>
@@ -810,7 +810,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>SkyShadow's Rapid Reporting Tool v1.03 Alpha</string>
+          <string>SkyShadow's Rapid Reporting Tool v1.04 Alpha</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -823,7 +823,7 @@ color: rgb(64, 64, 64);
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="resource.qrc">:/icons/tclogo.png</pixmap>
+          <pixmap resource="Resource/resource.qrc">:/icons/tclogo.png</pixmap>
          </property>
         </widget>
        </item>
@@ -843,7 +843,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Date: 05 September 2020</string>
+          <string>Date: 26 February 2021</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -862,7 +862,7 @@ color: rgb(64, 64, 64);
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="resource.qrc">:/icons/eh.png</pixmap>
+          <pixmap resource="Resource/resource.qrc">:/icons/eh.png</pixmap>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -885,7 +885,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Version : 1.03a</string>
+          <string>Version : 1.04a</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1237,6 +1237,7 @@ p, li { white-space: pre-wrap; }
   <tabstop>btnCopyMSEMisc</tabstop>
  </tabstops>
  <resources>
+  <include location="Resource/resource.qrc"/>
   <include location="resource.qrc"/>
  </resources>
  <connections/>
