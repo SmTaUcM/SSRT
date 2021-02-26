@@ -245,7 +245,7 @@ def btnInputClearFunc():
 def getTextListFromHtml(url):
 
     html = urllib.request.urlopen(url).read()
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, features="html.parser")
 
     # kill all script and style elements
     for script in soup(["script", "style"]):
@@ -547,7 +547,7 @@ def processData():
             elif "of Skirmish" in line:
 
                 # Single award
-                if "Medal awarded : Legion of Skirmish (LoS)" in line:
+                if "Legion of Skirmish (LoS)" in line:
                     loss += 1
 
                 # Multi award
@@ -618,9 +618,9 @@ def processData():
 
 
             # -----FCHG Rating-----
-            elif "New Fleet Commander's Honor Guard rank achieved : " in line:
+            elif "Flight Certification Wings awarded" in line:
                 result = line.split(" : ")[1]
-                fchgText += "\nAchieved Fleet Commander's Honor Guard rank of %s"%result.replace("\n", "")
+                fchgText += "\nAchieved Flight Certification Wings rank of %s"%result.replace("\n", "")
 
             # -----Combat Rating-----
             elif "New Combat Rating achieved : " in line:
@@ -653,8 +653,14 @@ def processData():
             # -----Mission Bug Reports-----
             elif "Submitted bug report" in line:
 
-                # Extract ther desired text e.g. TIE-TC 34
-                result = line.split("battle ")[1]
+                # Patch bug reports
+                if "patch" in line:
+                    result = line.split("patch ")[1]
+
+                # Normal bug reports.
+                else:
+                    # Extract ther desired text e.g. TIE-TC 34
+                    result = line.split("battle ")[1]
 
                 # Handle unwanted trailing ASCII characters left over for the website rip.
                 refinedResullt = ""
@@ -663,10 +669,17 @@ def processData():
                         refinedResullt += i
 
                 # Append the mission review to the bugReportsDict dictionary.
-                try:
-                    bugReportsDict[refinedResullt.split(" ")[0]] += ", " + refinedResullt.split(" ")[1]
-                except KeyError:
-                    bugReportsDict[refinedResullt.split(" ")[0]] = refinedResullt.split(" ")[1]
+                if "patch" in line:
+                    try:
+                        bugReportsDict["Patch "] += ", " + refinedResullt.rstrip(":")
+                    except KeyError:
+                        bugReportsDict["Patch "] = refinedResullt.rstrip(":")
+
+                else:
+                    try:
+                        bugReportsDict[refinedResullt.split(" ")[0]] += ", " + refinedResullt.split(" ")[1]
+                    except KeyError:
+                        bugReportsDict[refinedResullt.split(" ")[0]] = refinedResullt.split(" ")[1]
 
                 bugReports += 1
                 misc += 1
