@@ -11,8 +11,8 @@ setup(
       windows=
               [
                {
-                "script": "C:\Users\smtau\Dropbox\TIECorps\SkyShadow's Rapid Reporting Tool\Source\SkyShadow's Rapid Reporting Tool.py",
-                "icon_resources" : [(0, "C:\Users\smtau\Dropbox\TIECorps\SkyShadow's Rapid Reporting Tool\Source\Resource\icon.ico")]
+                "script": "D:\Stuart\Downloads\TIECorps\Tools\SkyShadow's Rapid Reporting Tool\Source\SkyShadow's Rapid Reporting Tool.py",
+                "icon_resources" : [(0, "D:\Stuart\Downloads\TIECorps\Tools\SkyShadow's Rapid Reporting Tool\Source\Resource\icon.ico")]
                }
               ],
       )
