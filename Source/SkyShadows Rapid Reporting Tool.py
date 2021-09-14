@@ -14,6 +14,12 @@
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 '''
 ------
+v1.05a
+------
+- BugFix - Not detecting single LoCs.
+- BugFix - Not detecting IS-Cx.
+
+------
 v1.04a
 ------
 - Feature - Upgraded to Python 3 / PyQt5.
@@ -402,6 +408,8 @@ def processData():
     ISSW = 0
     ISBR = 0
     ISBW = 0
+    ISCR = 0
+    ISCW = 0
     dfc = 0
     missHScore = 0
     battHScore = 0
@@ -528,7 +536,7 @@ def processData():
             elif "of Combat" in line:
 
                 # Single Award:
-                if "Medal awarded : Legion of Combat (LoC)" in line:
+                if "Legion of Combat (LoC)" in line:
                     locs += 1
 
                 # Multi Award:
@@ -605,6 +613,17 @@ def processData():
                     else:
                         newData.append(line) # Error handling.
                         unprocessed += line + "\n"
+
+                # Copper
+                elif "Copper" in result:
+                    if "Ribbon" in result:
+                        ISCR += 1
+                    elif "Wings" in result:
+                        ISCW += 1
+                    else:
+                        newData.append(line) # Error handling.
+                        unprocessed += line + "\n"
+
 
                 # Re-add the line if we can't detect the award so this it will be displayed at the bottom of the WSR output.
                 else:
@@ -770,7 +789,7 @@ def processData():
 
     # Convert items that equal '0' to nothing.
     scoredItems = [spMissions, locs, loss, "X", missHScore, battHScore, reports,
-                   reportsDatabased, reportsOC, comps, compsOC,  compsRunDWB, mois, misc]
+                   reportsDatabased, reportsOC, comps, compsOC, compsRunDWB, mois, misc]
 
     for item in scoredItems:
         if item != 0:
@@ -839,6 +858,13 @@ def processData():
 
     if ISBW != 0:
         wsrLine += "\nAwarded %sx Iron Star with Bronze Wings (IS-BW)"%ISBW
+
+    # Copper
+    if ISCR != 0:
+        wsrLine += "\nAwarded %sx Iron Star with Copper Ribbon (IS-BR)"%ISCR
+
+    if ISCW != 0:
+        wsrLine += "\nAwarded %sx Iron Star with Copper Wings (IS-BW)"%ISCW
 
 
     # ---------- Other Medals ----------
