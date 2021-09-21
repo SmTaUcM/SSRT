@@ -810,7 +810,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>SkyShadow's Rapid Reporting Tool v1.04 Alpha</string>
+          <string>SkyShadow's Rapid Reporting Tool v1.06</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -843,7 +843,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Date: 14 September 2021</string>
+          <string>Date: 21 September 2021</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -885,7 +885,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Version : 1.05a</string>
+          <string>Version : 1.06a</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
