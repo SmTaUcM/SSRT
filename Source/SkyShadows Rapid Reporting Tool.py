@@ -1,7 +1,7 @@
 '''#-------------------------------------------------------------------------------------------------------------------------------------------------#
 # Name:        SkyShadow's Rapid Reporting Tool (SRRT.py)
 # Purpose:     Rapidy produces WSR and MSE reports and saves them in the clipboard.
-# Version:     v1.03a
+# Version:     v1.06
 # Author:      Stuart Macintosh, SkyShadow
 #
 # Created:     29/06/2020
@@ -13,6 +13,16 @@
 #                                                                      Change Log.                                                                   #
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 '''
+------
+v1.06
+------
+- BugFix - Not detecting IU courses.
+- BugFix - Page Indexing.
+- BugFix - FCGH ranks.
+- BugFix - Initial FCW.
+- BugFix - Comps.
+- BugFix - IS-Cx Text.
+
 ------
 v1.05a
 ------
@@ -282,6 +292,7 @@ def getPilotActivityData(strName):
     # Retrieve the text from the EHTC website.
     lastPage = ""
     webPage = 0
+    pageIncrement = 500 # e.g. 500 for 0, 501, 1001 - Should equal the value in the ATR option "Next 500 records"
     endDateFound = False
     startDateFound = False
     output = []
@@ -291,7 +302,7 @@ def getPilotActivityData(strName):
         if webPage == 0:
             page = ""
         else:
-            page = "&start=%s01"%str(webPage)
+            page = "&start=%s"%str(webPage)
 
         url = "https://tc.emperorshammer.org/record.php?pin={pin}&type=atr{page}".format(pin=pin, page=page)
         text = getTextListFromHtml(url)
@@ -349,7 +360,10 @@ def getPilotActivityData(strName):
                 output.append(line)
 
         if not endDateFound or not startDateFound:
-            webPage += 1
+            if webPage == 0:
+                webPage = 501
+            else:
+                webPage += pageIncrement
 
     return output
     #------------------------------------------------------------------------------------------------------------------------------------------------#
@@ -432,6 +446,7 @@ def processData():
     spMissionDict = {}
     spMissiontext = ""
     highscoreText = ""
+    fcwText = ""
     fchgText = ""
     combatText = ""
     coopPVEText = ""
@@ -636,10 +651,22 @@ def processData():
                 mois += 1
 
 
-            # -----FCHG Rating-----
+            # -----Flight Wings-----
+            elif "Obtained TIE Corps Flight Certification" in line:
+                fcwText += "\nObtained TIE Corps Flight Certification"
+
+
+            # -----Flight Wings-----
             elif "Flight Certification Wings awarded" in line:
                 result = line.split(" : ")[1]
-                fchgText += "\nAchieved Flight Certification Wings rank of %s"%result.replace("\n", "")
+                fcwText += "\nAchieved Flight Certification Wings rank of %s"%result.replace("\n", "")
+
+
+            # -----FCHG Rating-----
+            elif "New Fleet Commander's Honor Guard rank achieved" in line:
+                result = line.split(" : ")[1]
+                fchgText += "\nAchieved FCHG rank of %s"%result.replace("\n", "").split("[")[0]
+
 
             # -----Combat Rating-----
             elif "New Combat Rating achieved : " in line:
@@ -747,21 +774,26 @@ def processData():
                 assignmentText += "\nAssigned to: " + result.replace("\n", "")
 
 
-            # -----IWATS Courses.-----
-            elif "IWATS Course added to Academic Record" in line:
-                results = line.split(" : ")[1].split(" - ")
-                iwatsText += "\nCompleted the IWATS/Imp U %s course with a score of %s"%(results[0], results [1].replace("\n", ""))
+            # -----IU Courses.-----
+            elif "Course added to Academic Record" in line:
+                results = line.replace("[", "").replace("]", "").split(" : ")[1].split(" - ")
+                iwatsText += "\nCompleted the IU %s course with a score of %s"%(results[0], results [1].replace("\n", ""))
                 iwats += 1
                 misc += 1
 
 
             # -----Reports-----
             elif "Submitted a new" in line and "report" in line:
-                reports += 1
+##                reports += 1
                 reportsDatabased += 1
 
 
-            # Write un proccessed lines back to the New Data.txt file.
+            # -----Competitions-----
+            elif "Submitted competition approved" in line:
+                comps += 1
+
+
+            # Write unproccessed lines back to the New Data.txt file.
             else:
                 if line != "":
                     newData.append(line)
@@ -812,7 +844,7 @@ def processData():
         bugReportText = "\nWritten bug reports for: " + str(bugReportsDict).replace("u'", "").replace("{", "").replace("}", "").replace("'", "")
 
     wsrLine = promotionText + assignmentText + spMissiontext\
-              + highscoreText + reviewText + bugReportText + fchgText + combatText + coopPVEText + iwatsText + uniformText + inprText
+              + highscoreText + reviewText + bugReportText + fcwText + fchgText + combatText + coopPVEText + iwatsText + uniformText + inprText
     wsrLine = wsrLine.strip("\n") # Removes the leading newline.
 
     # LoCs
@@ -861,10 +893,10 @@ def processData():
 
     # Copper
     if ISCR != 0:
-        wsrLine += "\nAwarded %sx Iron Star with Copper Ribbon (IS-BR)"%ISCR
+        wsrLine += "\nAwarded %sx Iron Star with Copper Ribbon (IS-CR)"%ISCR
 
     if ISCW != 0:
-        wsrLine += "\nAwarded %sx Iron Star with Copper Wings (IS-BW)"%ISCW
+        wsrLine += "\nAwarded %sx Iron Star with Copper Wings (IS-CW)"%ISCW
 
 
     # ---------- Other Medals ----------
