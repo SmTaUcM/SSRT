@@ -1,7 +1,7 @@
 '''#-------------------------------------------------------------------------------------------------------------------------------------------------#
 # Name:        SkyShadow's Rapid Reporting Tool (SRRT.py)
 # Purpose:     Rapidy produces WSR and MSE reports and saves them in the clipboard.
-# Version:     v1.06
+# Version:     v1.07
 # Author:      Stuart Macintosh, SkyShadow
 #
 # Created:     29/06/2020
@@ -13,6 +13,10 @@
 #                                                                      Change Log.                                                                   #
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 '''
+------
+v1.07
+------
+- BugFix - urlopen reporting that site certificates have expired.
 ------
 v1.06
 ------
@@ -89,6 +93,8 @@ from bs4 import BeautifulSoup
 import pkgutil
 import soupsieve
 import resource
+import certifi
+import ssl
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 
 
@@ -152,7 +158,7 @@ class SRRTApp(QMainWindow):
 
     def getSquadrons(self):
         # Get squadron info from EHTC website.
-        html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php").read()
+        html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php", context=ssl.create_default_context(cafile=certifi.where())).read()
 
         data = str(html).split(">Squadrons<")[1].split("daedalus.php")[0].split("type=sqn")
         for squad in data:
@@ -193,7 +199,7 @@ class SRRTApp(QMainWindow):
                 id = squad[0]
                 break
 
-        html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id)).read()
+        html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id), context=ssl.create_default_context(cafile=certifi.where())).read()
         data = str(html).split("uniform patch")[1].split("SQUADRON CITATIONS EARNED")[0].split("<br>")
 
         for line in data:
@@ -260,7 +266,7 @@ def btnInputClearFunc():
 
 def getTextListFromHtml(url):
 
-    html = urllib.request.urlopen(url).read()
+    html = urllib.request.urlopen(url, context=ssl.create_default_context(cafile=certifi.where())).read()
     soup = BeautifulSoup(html, features="html.parser")
 
     # kill all script and style elements
