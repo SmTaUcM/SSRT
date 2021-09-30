@@ -157,8 +157,15 @@ class SRRTApp(QMainWindow):
 
 
     def getSquadrons(self):
+
         # Get squadron info from EHTC website.
-        html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php", context=ssl.create_default_context(cafile=certifi.where())).read()
+        try:
+            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php")
+        except urllib.error.URLError as error:
+            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
+                html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php", context=ssl.create_default_context(cafile=certifi.where())).read()
+            else:
+                raise Exception("SSRT: Connection Error 1")
 
         data = str(html).split(">Squadrons<")[1].split("daedalus.php")[0].split("type=sqn")
         for squad in data:
@@ -199,7 +206,13 @@ class SRRTApp(QMainWindow):
                 id = squad[0]
                 break
 
-        html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id), context=ssl.create_default_context(cafile=certifi.where())).read()
+        try:
+            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id))
+        except urllib.error.URLError as error:
+            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
+                html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id), context=ssl.create_default_context(cafile=certifi.where())).read()
+            else:
+                raise Exception("SSRT: Connection Error 2")
         data = str(html).split("uniform patch")[1].split("SQUADRON CITATIONS EARNED")[0].split("<br>")
 
         for line in data:
@@ -266,7 +279,14 @@ def btnInputClearFunc():
 
 def getTextListFromHtml(url):
 
-    html = urllib.request.urlopen(url, context=ssl.create_default_context(cafile=certifi.where())).read()
+    try:
+        html = urllib.request.urlopen(url)
+    except urllib.error.URLError as error:
+        if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
+            html = urllib.request.urlopen(url, context=ssl.create_default_context(cafile=certifi.where())).read()
+        else:
+            raise Exception("SSRT: Connection Error 3")
+
     soup = BeautifulSoup(html, features="html.parser")
 
     # kill all script and style elements
