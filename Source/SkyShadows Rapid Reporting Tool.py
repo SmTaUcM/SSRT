@@ -160,7 +160,7 @@ class SRRTApp(QMainWindow):
 
         # Get squadron info from EHTC website.
         try:
-            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php")
+            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php").read()
         except urllib.error.URLError as error:
             if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
                 html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php", context=ssl.create_default_context(cafile=certifi.where())).read()
@@ -207,7 +207,7 @@ class SRRTApp(QMainWindow):
                 break
 
         try:
-            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id))
+            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id)).read()
         except urllib.error.URLError as error:
             if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
                 html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id), context=ssl.create_default_context(cafile=certifi.where())).read()
@@ -280,7 +280,7 @@ def btnInputClearFunc():
 def getTextListFromHtml(url):
 
     try:
-        html = urllib.request.urlopen(url)
+        html = urllib.request.urlopen(url).read()
     except urllib.error.URLError as error:
         if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
             html = urllib.request.urlopen(url, context=ssl.create_default_context(cafile=certifi.where())).read()
