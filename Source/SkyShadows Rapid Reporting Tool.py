@@ -1,7 +1,7 @@
 '''#-------------------------------------------------------------------------------------------------------------------------------------------------#
 # Name:        SkyShadow's Rapid Reporting Tool (SRRT.py)
 # Purpose:     Rapidy produces WSR and MSE reports and saves them in the clipboard.
-# Version:     v1.07
+# Version:     v1.08
 # Author:      Stuart Macintosh, SkyShadow
 #
 # Created:     29/06/2020
@@ -14,9 +14,15 @@
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 '''
 ------
+v1.08
+------
+- Feature - Updated to match current MSE Spreadsheet.
+
+------
 v1.07
 ------
 - BugFix - urlopen reporting that site certificates have expired.
+
 ------
 v1.06
 ------
@@ -810,7 +816,7 @@ def processData():
 
             # -----Reports-----
             elif "Submitted a new" in line and "report" in line:
-##                reports += 1
+                reports += 1
                 reportsDatabased += 1
 
 
@@ -837,9 +843,11 @@ def processData():
     squad = str(win.ui.cbSquadrons.currentText()).split(" ")[0].title() + "\t"
     moc = "\t"
     maxRank = "\t"
+    spare = "\t"
 
     rank, pos, maxRank = getPilotCredentials()
-    scoreLine = date + rank + pos + squad + moc + maxRank
+##    scoreLine = date + rank + pos + squad + moc + maxRank
+    scoreLine = date + rank + pos + squad + moc
 
 ##    # Convert items that equal '0' to nothing.
 ##    scoredItems = [spMissions, locs, loss, ISPR + ISPW, ISGR + ISGW + dfc, ISSR + ISSW, ISBR + ISBW, missHScore, battHScore, reports,
