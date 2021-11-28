@@ -17,6 +17,7 @@
 v1.08
 ------
 - Feature - Updated to match current MSE Spreadsheet.
+- Updated - Misc points to allow for multiple IWATS, INPR and Uniform updates.
 
 ------
 v1.07
@@ -471,6 +472,8 @@ def processData():
     bugReports = 0
     medals = {}
     iwats = 0
+    uniformUpdates = 0
+    inprUpdates = 0
 
     # Strings
     newData = []
@@ -482,7 +485,6 @@ def processData():
     fchgText = ""
     combatText = ""
     coopPVEText = ""
-    uniformUpdated = False
     uniformText = ""
     reviewsDict = {}
     reviewText = ""
@@ -491,7 +493,6 @@ def processData():
     promotionText = ""
     assignmentText = ""
     iwatsText = ""
-    inprUpdated = False
     inprText = ""
     miscText = ""
 
@@ -714,18 +715,16 @@ def processData():
 
             # -----Uniform Update-----
             elif "New uniform upload approved" in line:
-                if not uniformUpdated:
-                    uniformText = "\nUpdated their uniform"
-                    misc += 1
-                    uniformUpdated = True
+                misc += 1
+                uniformUpdates += 1
+                uniformText = "\nUpdated their uniform %s time(s)"%uniformUpdates
 
 
             # -----INPR Update-----
             elif "Updated Imperial Navy Personnel Record (INPR)" in line:
-                if not inprUpdated:
-                    inprText = "\nUpdated their Imperial Navy Personnel Record (INPR)"
-                    misc += 1
-                    inprUpdated = True
+                misc += 1
+                inprUpdates += 1
+                inprText = "\nUpdated their Imperial Navy Personnel Record (INPR) %s time(s)"%inprUpdates
 
 
             # -----Mission Bug Reports-----
@@ -940,19 +939,19 @@ def processData():
 
     # ----------Misc text.----------
     if reviews != 0:
-        miscText += "\n{0}x points for writing {0}x reviews".format(reviews)
+        miscText += "\n{0}x point(s) for writing {0}x review(s)".format(reviews)
 
     if bugReports != 0:
-        miscText += "\n{0}x points for writing {0}x bug reports".format(bugReports)
+        miscText += "\n{0}x point(s) for writing {0}x bug repor(s)".format(bugReports)
 
-    if uniformUpdated:
-        miscText += "\n1x point for updating their uniform"
+    if uniformUpdates != 0:
+        miscText += "\n{0}x point(s) for updating their uniform {0}x time(s)".format(uniformUpdates)
 
-    if inprUpdated:
-        miscText += "\n1x point for updating their INPR"
+    if inprUpdates != 0:
+        miscText += "\n{0}x point(s) for updating their INPR {0}x time(s)".format(inprUpdates)
 
     if iwats != 0:
-        miscText += "\n{0}x points for completing {0}x IWATS courses".format(iwats)
+        miscText += "\n{0}x point(s) for completing {0}x IWATS course(s)".format(iwats)
 
 
     # Unprocessed results handling
