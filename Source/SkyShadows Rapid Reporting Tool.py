@@ -1,7 +1,7 @@
 '''#-------------------------------------------------------------------------------------------------------------------------------------------------#
 # Name:        SkyShadow's Rapid Reporting Tool (SRRT.py)
 # Purpose:     Rapidy produces WSR and MSE reports and saves them in the clipboard.
-# Version:     v1.08
+# Version:     v2.00
 # Author:      Stuart Macintosh, SkyShadow
 #
 # Created:     29/06/2020
@@ -13,6 +13,11 @@
 #                                                                      Change Log.                                                                   #
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 '''
+------
+v2.00 - 31/01/2022
+------
+- Updated - SSRT Now uses Gonk for it's input data.
+
 ------
 v1.08
 ------
@@ -323,80 +328,49 @@ def getPilotActivityData(strName):
             break
 
     # Retrieve the text from the EHTC website.
-    lastPage = ""
-    webPage = 0
-    pageIncrement = 500 # e.g. 500 for 0, 501, 1001 - Should equal the value in the ATR option "Next 500 records"
-    endDateFound = False
-    startDateFound = False
     output = []
 
-    while not (endDateFound and startDateFound):
+    startDate = win.ui.calStart.selectedDate()
+    strStartDate = str(startDate.year()) + "-" + str(startDate.month()) + "-" + str(startDate.day())
+    endDate = win.ui.calEnd.selectedDate()
+    strEndDate = str(endDate.year()) + "-" + str(endDate.month()) + "-" + str(endDate.day())
 
-        if webPage == 0:
-            page = ""
+    url = "https://gonk.vercel.app/api/activity?pilotId={pin}&format=text&startDate={startDate}&endDate={endDate}".format(pin=pin, startDate=strStartDate, endDate=strEndDate)
+    text = getTextListFromHtml(url)
+
+    # Clean and format the text.
+    text = text.replace("*", "")
+    text = text.replace("NEW_REPORT:", "")
+    text = text.replace("MEDALS_AWARDED:", "")
+    text = text.replace("BATTLE_COMPLETED:", "")
+    text = text.replace("NEW_UNIFORM_APPROVED:", "")
+    text = text.replace("NEW_COMBAT_RATING:", "")
+    text = text.replace("SUBMITTED_BATTLE_REVIEW:", "")
+    text = text.replace("RANK_SET_BY_TCCOM:", "")
+    text = text.replace("IWATS_COMPLETED:", "")
+    text = text.replace("SUBMITTED_BATTLE_BUG_REPORT:", "")
+    text = text.replace("MEDAL_COUNT_UPDATED:", "")
+    text = text.replace("UPDATED_INPR:", "")
+    text = text.replace("FLIGHT_CERTIFICATION_WINGS:", "")
+    text = text.replace("NEW_COOP_RATING:", "")
+    text = text.replace("NEW_PROMOTION:", "")
+    text = text.replace("NEW_ASSIGNMENT:", "")
+    text = text.replace("UPDATED_ROSTER:", "")
+    text = text.replace("IU_COMPLETED:", "")
+    text = text.replace("CREATED_BATTLE:", "")
+    text = text.replace("SUBMITTED_FICTION:", "")
+    text = text.replace("NEW_COMPETITION:", "")
+    text = text.replace("OBTAINED_FLIGHT_CERTIFICATION:", "")
+    text = text.replace("unknown:", "")
+    output = text.split("\n")[3:]
+
+    filteredOutput = []
+    for item in output:
+        if "Medal count updated by the SOO" in item:
+            pass
         else:
-            page = "&start=%s"%str(webPage)
-
-        url = "https://tc.emperorshammer.org/record.php?pin={pin}&type=atr{page}".format(pin=pin, page=page)
-        text = getTextListFromHtml(url)
-
-        # Check to see if we are still getting new data from the EH website - prevents infinite search loop.
-        if text == lastPage:
-            break
-        else:
-            lastPage = text
-
-        # Process the text for SRRT.
-        text = text.split("Date\nActivity")[1]
-
-        # Because our web rip comes in as a single line of text we need to parse ther string and detect where our newlines should be, then rebuild
-        # the text as a list of strings.
-        newText = ""
-        index = 0
-
-        for char in text:
-            try:
-                if char.isdigit() and text[index + 1].isdigit() and text[index + 2] == "/" \
-                   and text[index + 3].isdigit() and text[index + 4].isdigit() and text[index + 5] == "/" \
-                   and text[index + 6].isdigit() and text[index + 7].isdigit() and text[index + 8].isdigit() and text[index + 9].isdigit():
-
-                   newText += "NEWLINE" + char
-                else:
-                    newText += char
-            except IndexError:
-                pass # Used to handle a date being entered into a ATR with no other text.
-            index += 1
-
-        # Add a new line delimiter.
-        newText = newText.split("NEWLINE")
-        newText[-1] = newText[-1].split("Next ")[0] # Remove the Next / Previiout records line.
-
-        # Check that the dates meet our date range criteria.
-        startDate = win.ui.calStart.selectedDate()
-        endDate = win.ui.calEnd.selectedDate()
-
-        for line in newText:
-            # Convert the date in our line to a QDate for comparrison
-            if line != "\n":
-                lineDate =  line[:10].split("/")
-                lineDate = QtCore.QDate(int(lineDate[2]), int(lineDate[0]), int(lineDate[1]))
-
-                if lineDate <= endDate:
-                    endDateFound = True
-
-                if lineDate < startDate:
-                    startDateFound = True
-                    break # Stops adding earlier data
-
-            # Add the ATR data if it falls within our date ranges.
-            if endDateFound and not startDateFound:
-                output.append(line)
-
-        if not endDateFound or not startDateFound:
-            if webPage == 0:
-                webPage = 501
-            else:
-                webPage += pageIncrement
+            filteredOutput.append(item)
+    output = filteredOutput
 
     return output
     #------------------------------------------------------------------------------------------------------------------------------------------------#
@@ -467,6 +441,7 @@ def processData():
     compsOC = 0
     compsRunDWB = 0
     mois = 0
+    fiction = 0
     misc = 0
     reviews = 0
     bugReports = 0
@@ -494,6 +469,9 @@ def processData():
     assignmentText = ""
     iwatsText = ""
     inprText = ""
+    reportsText = ""
+    compsText = ""
+    fictionText = ""
     miscText = ""
 
     # Retrieve the pilots data for the selected pilot in the Pilots: comboBoz.
@@ -501,6 +479,7 @@ def processData():
 
 # ----------Parse the data for processing.----------
     for line in data:
+
         if line != "\n":
 
             # -----SP Missions-----
@@ -581,93 +560,64 @@ def processData():
 
 
             # -----LoCs-----
-            elif "of Combat" in line:
-
-                # Single Award:
-                if "Legion of Combat (LoC)" in line:
-                    locs += 1
-
-                # Multi Award:
-                elif "Legions of Combat (LoCs)" in line:
-                    result = line.split(":")[1]
-                    result = result.split(" ")[1]
-                    locs += int(result)
-
-                # Error handling:
-                else:
-                    newData.append(line)
-                    unprocessed += line + "\n"
+            elif "LoC x " in line:
+                locs += int(line.replace("LoC x ", ""))
 
 
             # -----LoSs-----
-            elif "of Skirmish" in line:
-
-                # Single award
-                if "Legion of Skirmish (LoS)" in line:
-                    loss += 1
-
-                # Multi award
-                elif "Legions of Skirmish (LoSs)" in line:
-                    result = line.split(":")[1]
-                    result = result.split(" ")[1]
-                    loss += int(result)
-
-                # Error handling:
-                else:
-                    newData.append(line)
-                    unprocessed += line + "\n"
+            elif "LoS x " in line:
+                loss += int(line.replace("LoS x ", ""))
 
 
             # -----Iron Stars-----
-            elif "Iron Star" in line:
-                result = line.split(" : ")[1]
-
+            elif "IS-" in line:
+                result = line
                 # Platinum
-                if "Platinum" in result:
-                    if "Ribbon" in result:
-                        ISPR += 1
-                    elif "Wings" in result:
-                        ISPW += 1
+                if "IS-P" in result:
+                    if "IS-PR" in result:
+                        ISPR = int(result.split(" x ")[1])
+                    elif "IS-PW" in result:
+                        ISPW = int(result.split(" x ")[1])
                     else:
                         newData.append(line) # Error handling.
                         unprocessed += line + "\n"
 
                 # Gold
-                elif "Gold" in result:
-                    if "Ribbon" in result:
-                        ISGR += 1
-                    elif "Wings" in result:
-                        ISGW += 1
+                elif "IS-G" in result:
+                    if "IS-GR" in result:
+                        ISGR = int(result.split(" x ")[1])
+                    elif "IS-GW" in result:
+                        ISGW = int(result.split(" x ")[1])
                     else:
                         newData.append(line) # Error handling.
                         unprocessed += line + "\n"
 
                 # Silver
-                elif "Silver" in result:
-                    if "Ribbon" in result:
-                        ISSR += 1
-                    elif "Wings" in result:
-                        ISSW += 1
+                elif "IS-S" in result:
+                    if "IS-SR" in result:
+                        ISSR = int(result.split(" x ")[1])
+                    elif "IS-SW" in result:
+                        ISSW = int(result.split(" x ")[1])
                     else:
                         newData.append(line) # Error handling.
                         unprocessed += line + "\n"
 
                 # Bronze
-                elif "Bronze" in result:
-                    if "Ribbon" in result:
-                        ISBR += 1
-                    elif "Wings" in result:
-                        ISBW += 1
+                elif "IS-B" in result:
+                    if "IS-BR" in result:
+                        ISBR = int(result.split(" x ")[1])
+                    elif "IS-BW" in result:
+                        ISBW = int(result.split(" x ")[1])
                     else:
                         newData.append(line) # Error handling.
                         unprocessed += line + "\n"
 
                 # Copper
-                elif "Copper" in result:
-                    if "Ribbon" in result:
-                        ISCR += 1
-                    elif "Wings" in result:
-                        ISCW += 1
+                elif "IS-C" in result:
+                    if "IS-CR" in result:
+                        ISCR = int(result.split(" x ")[1])
+                    elif "IS-CW" in result:
+                        ISCW = int(result.split(" x ")[1])
                     else:
                         newData.append(line) # Error handling.
                         unprocessed += line + "\n"
@@ -680,7 +630,7 @@ def processData():
 
 
             # ----- Medal of Instruction (MoI)-----
-            elif "Medal of Instruction (MoI)" in line:
+            elif "MoI" in line:
                 mois += 1
 
 
@@ -785,12 +735,11 @@ def processData():
 
 
             # -----Other Medals-----
-            elif "Medal awarded : " in line:
-                result = line.split(" : ")[1].replace("\n", "")
-                if result not in medals:
-                    medals[result] = 1
-                else:
-                    medals[result] += 1
+            elif " x " in line:
+                result = line.replace("\n", "").split(" x ")
+                medalName = result[0]
+                medalCount = result[1]
+                medals[medalName] = medalCount
 
 
             # -----Promotions-----
@@ -801,7 +750,7 @@ def processData():
 
             # -----Assignments-----
             elif "New assignment :" in line:
-                result = line.split(":")[1].rstrip("Previous Records ")
+                result = line.split(":")[1]
                 assignmentText += "\nAssigned to: " + result.replace("\n", "")
 
 
@@ -812,16 +761,25 @@ def processData():
                 iwats += 1
                 misc += 1
 
+            # -----Fiction.-----
+            elif "New FICTION added by WARD" in line:
+                results = line.split("] ")[1]
+                fictionText += "\n" + results.replace("FICTION", "fiction")
+                fiction += 1
+                misc += 1
+
 
             # -----Reports-----
             elif "Submitted a new" in line and "report" in line:
                 reports += 1
                 reportsDatabased += 1
+                reportsText = "\nSubmitted x%s reports"%reports
 
 
             # -----Competitions-----
             elif "Submitted competition approved" in line:
                 comps += 1
+                compsText = "\nSubmitted x%s competitons"%comps
 
 
             # Write unproccessed lines back to the New Data.txt file.
@@ -845,12 +803,7 @@ def processData():
     spare = "\t"
 
     rank, pos, maxRank = getPilotCredentials()
-##    scoreLine = date + rank + pos + squad + moc + maxRank
     scoreLine = date + rank + pos + squad + moc
-
-##    # Convert items that equal '0' to nothing.
-##    scoredItems = [spMissions, locs, loss, ISPR + ISPW, ISGR + ISGW + dfc, ISSR + ISSW, ISBR + ISBW, missHScore, battHScore, reports,
-##                   reportsDatabased, reportsOC, comps, compsOC,  compsRunDWB, mois, misc]
 
     # Convert items that equal '0' to nothing.
     scoredItems = [spMissions, locs, loss, "X", missHScore, battHScore, reports,
@@ -877,22 +830,22 @@ def processData():
         bugReportText = "\nWritten bug reports for: " + str(bugReportsDict).replace("u'", "").replace("{", "").replace("}", "").replace("'", "")
 
     wsrLine = promotionText + assignmentText + spMissiontext\
-              + highscoreText + reviewText + bugReportText + fcwText + fchgText + combatText + coopPVEText + iwatsText + uniformText + inprText
+              + highscoreText + reviewText + bugReportText + fcwText + fchgText + combatText + coopPVEText + iwatsText + uniformText + inprText + reportsText + compsText + fictionText
     wsrLine = wsrLine.strip("\n") # Removes the leading newline.
 
     # LoCs
     if locs != 0:
         if locs == 1:
-            wsrLine += "\nAwarded %sx Legion of Combat (LoC)"%locs
+            wsrLine += "\nAwarded x%s Legion of Combat (LoC)"%locs
         else:
-            wsrLine += "\nAwarded %sx Legions of Combat (LoCs)"%locs
+            wsrLine += "\nAwarded x%s Legions of Combat (LoCs)"%locs
 
     # LoSs
     if loss != 0:
         if loss == 1:
-            wsrLine += "\nAwarded %sx Legion of Skirmish (LoS)"%loss
+            wsrLine += "\nAwarded x%s Legion of Skirmish (LoS)"%loss
         else:
-            wsrLine += "\nAwarded %sx Legions of Skirmish (LoSs)"%loss
+            wsrLine += "\nAwarded x%s Legions of Skirmish (LoSs)"%loss
 
 
     #---------- Ion Stars ----------
@@ -952,6 +905,9 @@ def processData():
 
     if iwats != 0:
         miscText += "\n{0}x point(s) for completing {0}x IWATS course(s)".format(iwats)
+
+    if fiction != 0:
+        miscText += "\n???x point(s) for writing {0}x fiction(s)".format(fiction)
 
 
     # Unprocessed results handling
