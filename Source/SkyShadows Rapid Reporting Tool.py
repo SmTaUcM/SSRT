@@ -170,20 +170,22 @@ class SRRTApp(QMainWindow):
 
     def getSquadrons(self):
 
-        # Get squadron info from EHTC website.
-        try:
-            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php").read()
-        except urllib.error.URLError as error:
-            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
-                html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php", context=ssl.create_default_context(cafile=certifi.where())).read()
-            else:
-                raise Exception("SSRT: Connection Error 1")
+##        # Get squadron info from EHTC website.
+##        try:
+##            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php").read()
+##        except urllib.error.URLError as error:
+##            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
+##                html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php", context=ssl.create_default_context(cafile=certifi.where())).read()
+##            else:
+##                raise Exception("SSRT: Connection Error 1")
+##
+##        data = str(html).split(">Squadrons<")[1].split("daedalus.php")[0].split("type=sqn")
+##        for squad in data:
+##            if "Squadron" in squad:
+##                info = squad.replace("&", "").split("</a>")[0].replace("id=", "").split('">')
+##                self.squadrons.append(info)
 
-        data = str(html).split(">Squadrons<")[1].split("daedalus.php")[0].split("type=sqn")
-        for squad in data:
-            if "Squadron" in squad:
-                info = squad.replace("&", "").split("</a>")[0].replace("id=", "").split('">')
-                self.squadrons.append(info)
+        self.squadrons.append(["64", "Sin Squadron"])
 
         # Add ther squadron names to the combo box.
         for squad in self.squadrons:
@@ -212,24 +214,34 @@ class SRRTApp(QMainWindow):
 
     def getPilots(self, strSquadron):
         self.pilots = []
-        id = 0
-        for squad in self.squadrons:
-            if strSquadron == squad[1]:
-                id = squad[0]
-                break
-
-        try:
-            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id)).read()
-        except urllib.error.URLError as error:
-            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
-                html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id), context=ssl.create_default_context(cafile=certifi.where())).read()
-            else:
-                raise Exception("SSRT: Connection Error 2")
-        data = str(html).split("uniform patch")[1].split("SQUADRON CITATIONS EARNED")[0].split("<br>")
-
-        for line in data:
-            if "profile" in line:
-                self.pilots.append(line.split(".php?")[1].replace("</a>", "").split("</td>")[0].replace("pin=", "").split('&type=profile">'))
+        self.pilots.append(["6958", "CPT SkyShadow", "CMDR"])
+        self.pilots.append(["56220", "LT Ivan Hordiyanko", "FM"])
+        self.pilots.append(["56002", "CM Kazraran", "FM"])
+        self.pilots.append(["11276", "GN Earnim Branet", "FM"])
+        self.pilots.append(["55859", "MAJ Robert Hogan", "FL"])
+        self.pilots.append(["56085", "LCM Kane Polybius", "FM"])
+        self.pilots.append(["56157", "LT AnArKey223", "FM"])
+        self.pilots.append(["55962", "MAJ Wreckage", "FL"])
+        self.pilots.append(["56110", "LCM AlexanderK9", "FM"])
+        self.pilots.append(["5243", "GN Exar Kit", "FM"])
+##        id = 0
+##        for squad in self.squadrons:
+##            if strSquadron == squad[1]:
+##                id = squad[0]
+##                break
+##
+##        try:
+##            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id)).read()
+##        except urllib.error.URLError as error:
+##            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
+##                html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id), context=ssl.create_default_context(cafile=certifi.where())).read()
+##            else:
+##                raise Exception("SSRT: Connection Error 2")
+##        data = str(html).split("uniform patch")[1].split("SQUADRON CITATIONS EARNED")[0].split("<br>")
+##
+##        for line in data:
+##            if "profile" in line:
+##                self.pilots.append(line.split(".php?")[1].replace("</a>", "").split("</td>")[0].replace("pin=", "").split('&type=profile">'))
         return self.pilots
         #--------------------------------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
@@ -378,33 +390,38 @@ def getPilotActivityData(strName):
 
 def getPilotCredentials():
 
-    rank = 2
-    ranks = ["UNUSED", "CT", "SL", "LT", "LCM", "CM", "CPT", "MAJ", "LC", "COL", "GN", "RA", "VA", "AD", "FA", "HA"]
-    maxRank = "UNKNOWN"
-    position = 4
+##    rank = 2
+##    ranks = ["UNUSED", "CT", "SL", "LT", "LCM", "CM", "CPT", "MAJ", "LC", "COL", "GN", "RA", "VA", "AD", "FA", "HA"]
+##    maxRank = "UNKNOWN"
+##    position = 4
     # Rank as string, max rank as int
-    positions = [["UNUSED", 0], ["TRN", 0], ["FM", 6], ["FL", 8], ["CMDR", 9], ["WC", 9], ["COM", 12], ["COO", 13], ["SOO", 13], ["TCCOM", 14]]
+##    positions = [["UNUSED", 0], ["TRN", 0], ["FM", 6], ["FL", 8], ["CMDR", 9], ["WC", 9], ["COM", 12], ["COO", 13], ["SOO", 13], ["TCCOM", 14]]
 
     pilotName = win.ui.cbPilots.currentText()
 
     # Determine pilot Pin number.
-    pin = 0
+##    pin = 0
+    rank = "RANK"
+    position = "POSITION"
     for pilot in win.pilots:
         if pilot[1] == pilotName:
-            pin = pilot[0]
+##            pin = pilot[0]
+            rank = pilot[1].split(" ")[0]
+            position = pilot[2]
             break
 
-    url = "https://tc.emperorshammer.org/TTT2backend.php?pin=" + pin
-    text = getTextListFromHtml(url).split("\n")
-
-    # Determin if pilot has achieved their max rank.
-    if int(text[rank]) >= positions[int(text[position])][1]:
-        maxRank = "Y"
-    else:
-        maxRank = "N"
+##    url = "https://tc.emperorshammer.org/TTT2backend.php?pin=" + pin
+##    text = getTextListFromHtml(url).split("\n")
+##
+##    # Determin if pilot has achieved their max rank.
+##    if int(text[rank]) >= positions[int(text[position])][1]:
+##        maxRank = "Y"
+##    else:
+##        maxRank = "N"
 
     # return strRank strPos strMax
-    return ranks[int(text[rank])] + "\t", positions[int(text[position])][0] + "\t", maxRank + "\t"
+##    return ranks[int(text[rank])] + "\t", positions[int(text[position])][0] + "\t", maxRank + "\t"
+    return [rank + "\t", position + "\t", "MAX_RANK\t"]
     #------------------------------------------------------------------------------------------------------------------------------------------------#
 
 
