@@ -170,22 +170,22 @@ class SRRTApp(QMainWindow):
 
     def getSquadrons(self):
 
-##        # Get squadron info from EHTC website.
-##        try:
-##            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php").read()
-##        except urllib.error.URLError as error:
-##            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
-##                html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php", context=ssl.create_default_context(cafile=certifi.where())).read()
-##            else:
-##                raise Exception("SSRT: Connection Error 1")
-##
-##        data = str(html).split(">Squadrons<")[1].split("daedalus.php")[0].split("type=sqn")
-##        for squad in data:
-##            if "Squadron" in squad:
-##                info = squad.replace("&", "").split("</a>")[0].replace("id=", "").split('">')
-##                self.squadrons.append(info)
+        # Get squadron info from EHTC website.
+        try:
+            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php").read()
+        except urllib.error.URLError as error:
+            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
+                html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php", context=ssl.create_default_context(cafile=certifi.where())).read()
+            else:
+                raise Exception("SSRT: Connection Error 1")
 
-        self.squadrons.append(["64", "Sin Squadron"])
+        data = str(html).split(r"<h2>Squadrons</h2>\n")[1].split(r"<h2>Reserves and Training Units</h2>\n")[0].split("Squadron")
+
+        for squad in data[:-1]:
+            sqn = squad.split(r"href=\'/roster.php?")[1]
+            info = sqn.split(r"\'>")
+            info[1] = info[1] + "Squadron"
+            self.squadrons.append(info)
 
         # Add ther squadron names to the combo box.
         for squad in self.squadrons:
@@ -214,35 +214,55 @@ class SRRTApp(QMainWindow):
 
     def getPilots(self, strSquadron):
         self.pilots = []
-        self.pilots.append(["6958", "CPT SkyShadow", "CMDR"])
-        self.pilots.append(["56220", "LT Ivan Hordiyanko", "FM"])
-        self.pilots.append(["56002", "CM Kazraran", "FM"])
-        self.pilots.append(["11276", "GN Earnim Branet", "FM"])
-        self.pilots.append(["55859", "MAJ Robert Hogan", "FL"])
-        self.pilots.append(["56085", "LCM Kane Polybius", "FM"])
-        self.pilots.append(["56157", "LT AnArKey223", "FM"])
-        self.pilots.append(["55962", "MAJ Wreckage", "FL"])
-        self.pilots.append(["56110", "LCM AlexanderK9", "FM"])
-        self.pilots.append(["5243", "GN Exar Kit", "FM"])
-##        id = 0
-##        for squad in self.squadrons:
-##            if strSquadron == squad[1]:
-##                id = squad[0]
-##                break
-##
-##        try:
-##            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id)).read()
-##        except urllib.error.URLError as error:
-##            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
-##                html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?type=sqn&id={squadID}".format(squadID=id), context=ssl.create_default_context(cafile=certifi.where())).read()
-##            else:
-##                raise Exception("SSRT: Connection Error 2")
-##        data = str(html).split("uniform patch")[1].split("SQUADRON CITATIONS EARNED")[0].split("<br>")
-##
-##        for line in data:
-##            if "profile" in line:
-##                self.pilots.append(line.split(".php?")[1].replace("</a>", "").split("</td>")[0].replace("pin=", "").split('&type=profile">'))
+        id = 0
+
+        for squad in self.squadrons:
+            if strSquadron == squad[1]:
+                id = squad[0]
+                break
+
+        try:
+            html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?{squadID}".format(squadID=id)).read()
+        except urllib.error.URLError as error:
+            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
+                html = urllib.request.urlopen("https://tc.emperorshammer.org/roster.php?{squadID}".format(squadID=id), context=ssl.create_default_context(cafile=certifi.where())).read()
+            else:
+                raise Exception("SSRT: Connection Error 2")
+
+        data = str(html).split("div")
+
+        for pilot in data:
+            if r"<a class=\'active pilot\'" in pilot:
+                if "Squadron Commander" not in pilot:
+                    name = pilot.split(r"type=profile\'>")[1].split(r"</a></mark></")[0]
+                    pin, pos = self.getPinPos(pilot, name)
+                    self.pilots.append([pin , name, pos])
+
         return self.pilots
+        #--------------------------------------------------------------------------------------------------------------------------------------------#
+
+
+    def getPinPos(self, pilot, name):
+        pin = "0000"
+
+
+        ref = pilot.split(r"href=\'")[1].split(r"'>")[0][:-1]
+
+        try:
+            html = urllib.request.urlopen("https://tc.emperorshammer.org{ref}".format(ref=ref)).read()
+        except urllib.error.URLError as error:
+            if "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired" in str(error):
+                html = urllib.request.urlopen("https://tc.emperorshammer.org{ref}".format(ref=ref), context=ssl.create_default_context(cafile=certifi.where())).read()
+            else:
+                raise Exception("SSRT: Connection Error 2")
+
+        name = name.split(" ", 1)[1]
+        pin = str(html).split(name)[1].split(r")</h3>\n                            <span class=\'is-size-7 has-text-weight-normal\'>Callsign:")[0].replace(r"(#", "")
+        pin = pin.split(")")[0].replace(" ", "")
+        pos = str(html).split(r"addresses.</small>\n")[1].split(name)[0]
+        pos = pos.split("<small>")[1].split("-")[0].split(r"/")[0]
+
+        return str(pin), str(pos)
         #--------------------------------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -580,10 +600,20 @@ def processData():
             elif "LoC x " in line:
                 locs += int(line.replace("LoC x ", ""))
 
+            elif "Legions of Combat (LoC)" in line:
+                result = line.split(":")[1]
+                result = result.split(" ")[1]
+                locs += int(result)
+
 
             # -----LoSs-----
             elif "LoS x " in line:
                 loss += int(line.replace("LoS x ", ""))
+
+            elif "Legions of Skirmish (LoS)" in line:
+                result = line.split(":")[1]
+                result = result.split(" ")[1]
+                loss += int(result)
 
 
             # -----Iron Stars-----
