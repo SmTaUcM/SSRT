@@ -767,7 +767,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Created by CPT SkyShadow</string>
+          <string>Created by MAJ SkyShadow</string>
          </property>
         </widget>
        </item>
@@ -810,7 +810,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>SkyShadow's Rapid Reporting Tool v1.08</string>
+          <string>SkyShadow's Rapid Reporting Tool v2.00</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -843,7 +843,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Date: 28 November 2021</string>
+          <string>Date: 31 January 2022</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -885,7 +885,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Version : 1.08</string>
+          <string>Version : 2.00</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
