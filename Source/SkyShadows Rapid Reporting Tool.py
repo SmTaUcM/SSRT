@@ -410,37 +410,18 @@ def getPilotActivityData(strName):
 
 def getPilotCredentials():
 
-##    rank = 2
-##    ranks = ["UNUSED", "CT", "SL", "LT", "LCM", "CM", "CPT", "MAJ", "LC", "COL", "GN", "RA", "VA", "AD", "FA", "HA"]
-##    maxRank = "UNKNOWN"
-##    position = 4
-    # Rank as string, max rank as int
-##    positions = [["UNUSED", 0], ["TRN", 0], ["FM", 6], ["FL", 8], ["CMDR", 9], ["WC", 9], ["COM", 12], ["COO", 13], ["SOO", 13], ["TCCOM", 14]]
-
     pilotName = win.ui.cbPilots.currentText()
 
     # Determine pilot Pin number.
-##    pin = 0
     rank = "RANK"
     position = "POSITION"
     for pilot in win.pilots:
         if pilot[1] == pilotName:
-##            pin = pilot[0]
             rank = pilot[1].split(" ")[0]
             position = pilot[2]
             break
 
-##    url = "https://tc.emperorshammer.org/TTT2backend.php?pin=" + pin
-##    text = getTextListFromHtml(url).split("\n")
-##
-##    # Determin if pilot has achieved their max rank.
-##    if int(text[rank]) >= positions[int(text[position])][1]:
-##        maxRank = "Y"
-##    else:
-##        maxRank = "N"
-
     # return strRank strPos strMax
-##    return ranks[int(text[rank])] + "\t", positions[int(text[position])][0] + "\t", maxRank + "\t"
     return [rank + "\t", position + "\t", "MAX_RANK\t"]
     #------------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -456,6 +437,12 @@ def processData():
     # Intergers
     lineIndex = 0
     spMissions = 0
+    gs = 0
+    ss = 0
+    bs = 0
+    pc = 0
+    ism = 0
+    iar = 0
     locs = 0
     loss = 0
     ISPR = 0
@@ -520,7 +507,7 @@ def processData():
         if line != "\n":
 
             # -----SP Missions-----
-            if "Battle completed : " in line and "mission" in line:
+            if ("Battle completed" in line and "mission" in line) or ("Free mission completed" in line and "mission" in line):
 
                 # MSE Score.
                 result = line.split("(")[1]
@@ -529,7 +516,7 @@ def processData():
 
                 # WSR Text.
                     # Extract ther desired text e.g. TIE-TC 34
-                result = line.split(" : ")[1]
+                result = line.split(": ")[1]
                 result = result.split(" (")[0]
 
                 # Append the mission flown to the spMissionsDict dictionary.
@@ -543,7 +530,7 @@ def processData():
                 if "highscore" in line.lower():
                     # Find the battle/mission completed in the previous line
                     sortieLine = line
-                    sortieLine = sortieLine.split(" : ")[1]
+                    sortieLine = sortieLine.split(": ")[1]
                     sortieLine = sortieLine.split(" (")
                     battleName = sortieLine[0]
 
@@ -596,6 +583,21 @@ def processData():
                         unprocessed += line + "\n"
 
 
+            # -----Merit Medals-----
+            elif "Gold Star" in line and "New award: " not in line:
+                gs += 1
+            elif "Silver Star" in line and "New award: " not in line:
+                ss += 1
+            elif "Bronze Star" in line and "New award: " not in line:
+                bs += 1
+            elif "Palpatine" in line and "New award: " not in line:
+                pc += 1
+            elif "Imperial Security" in line and "New award: " not in line:
+                ism += 1
+            elif "Imperial Achievement Ribbon" in line and "New award: " not in line:
+                iar += 1
+
+
             # -----LoCs-----
             elif "LoC x " in line:
                 locs += int(line.replace("LoC x ", ""))
@@ -604,6 +606,9 @@ def processData():
                 result = line.split(":")[1]
                 result = result.split(" ")[1]
                 locs += int(result)
+
+            elif "Legion of Combat (LoC)" in line:
+                locs += 1
 
 
             # -----LoSs-----
@@ -614,6 +619,9 @@ def processData():
                 result = line.split(":")[1]
                 result = result.split(" ")[1]
                 loss += int(result)
+
+            elif "Legion of Skirmish (LoS)" in line:
+                loss += 1
 
 
             # -----Iron Stars-----
@@ -688,25 +696,25 @@ def processData():
 
             # -----Flight Wings-----
             elif "Flight Certification Wings awarded" in line:
-                result = line.split(" : ")[1]
+                result = line.split(": ")[1]
                 fcwText += "\nAchieved Flight Certification Wings rank of %s"%result.replace("\n", "")
 
 
             # -----FCHG Rating-----
             elif "New Fleet Commander's Honor Guard rank achieved" in line:
-                result = line.split(" : ")[1]
+                result = line.split(": ")[1]
                 fchgText += "\nAchieved FCHG rank of %s"%result.replace("\n", "").split("[")[0]
 
 
             # -----Combat Rating-----
-            elif "New Combat Rating achieved : " in line:
-                result = line.split(" : ")[1]
+            elif "New Combat Rating" in line:
+                result = line.split(": ")[1]
                 combatText += "\nAchieved Combat Rating of %s"%result.replace("\n", "")
 
 
             # -----COOP/PVE Rating-----
             elif "New COOP/PVE Rating achieved : " in line:
-                result = line.split(" : ")[1]
+                result = line.split(": ")[1]
                 coopPVEText += "\nAchieved COOP/PVE Rating of %s"%result.replace("\n", "")
 
 
@@ -790,6 +798,10 @@ def processData():
 
 
             # -----Promotions-----
+            elif "new rank set " in line.lower() or "new promotion: " in line.lower():
+                result = line.split(": ")[1].replace("\n", "")
+                promotionText += "\nPromoted to the rank of %s"%result
+
             elif "new rank set " in line.lower() or "new promotion : " in line.lower():
                 result = line.split(" : ")[1].replace("\n", "")
                 promotionText += "\nPromoted to the rank of %s"%result
@@ -827,6 +839,19 @@ def processData():
             elif "Submitted competition approved" in line:
                 comps += 1
                 compsText = "\nSubmitted x%s competitons"%comps
+
+            # -----Filter Out Unwanted Lines-----
+            elif "UPDATED_UNIT_INFORMATION" in line:
+                pass
+
+            elif "Updated unit information for Sin Squadron" in line:
+                pass
+
+            elif "Updated the roster information for Sin squadron" in line:
+                pass
+
+            elif "NEW_FCHG:" in line:
+                pass
 
 
             # Write unproccessed lines back to the New Data.txt file.
@@ -879,6 +904,43 @@ def processData():
     wsrLine = promotionText + assignmentText + spMissiontext\
               + highscoreText + reviewText + bugReportText + fcwText + fchgText + combatText + coopPVEText + iwatsText + uniformText + inprText + reportsText + compsText + fictionText
     wsrLine = wsrLine.strip("\n") # Removes the leading newline.
+
+    # Merit Medals.
+    if gs != 0:
+        if gs == 1:
+            wsrLine += "\nAwarded x%s Gold Star of the Empire (GS)"%gs
+        else:
+            wsrLine += "\nAwarded x%s Gold Stars of the Empire (GS)"%gs
+
+    if ss != 0:
+        if ss == 1:
+            wsrLine += "\nAwarded x%s Silver Star of the Empire (SS)"%ss
+        else:
+            wsrLine += "\nAwarded x%s Silver Stars of the Empire (SS)"%ss
+
+    if bs != 0:
+        if bs == 1:
+            wsrLine += "\nAwarded x%s Bronze Star of the Empire (BS)"%bs
+        else:
+            wsrLine += "\nAwarded x%s Bronze Stars of the Empire (BS)"%bs
+
+    if pc != 0:
+        if pc == 1:
+            wsrLine += "\nAwarded x%s Palpatine Crescent (PC)"%pc
+        else:
+            wsrLine += "\nAwarded x%s Palpatine Crescents (PC)"%pc
+
+    if ism != 0:
+        if ism == 1:
+            wsrLine += "\nAwarded x%s Imperial Security Medal (ISM)"%ism
+        else:
+            wsrLine += "\nAwarded x%s Imperial Security Medals (ISM)"%ism
+
+    if iar != 0:
+        if iar == 1:
+            wsrLine += "\nAwarded x%s Imperial Achievement Ribbon (IAR)"%iar
+        else:
+            wsrLine += "\nAwarded x%s Imperial Achievement Ribbons (IAR)"%iar
 
     # LoCs
     if locs != 0:
