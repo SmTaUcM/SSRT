@@ -742,7 +742,10 @@ def processData():
                 # Normal bug reports.
                 else:
                     # Extract ther desired text e.g. TIE-TC 34
-                    result = line.split("battle ")[1]
+                    try:
+                        result = line.split("battle ")[1]
+                    except IndexError:
+                        result = result
 
                 # Handle unwanted trailing ASCII characters left over for the website rip.
                 refinedResullt = ""
