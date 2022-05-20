@@ -257,8 +257,7 @@ class SRRTApp(QMainWindow):
                 raise Exception("SSRT: Connection Error 2")
 
         name = name.split(" ", 1)[1]
-        pin = str(html).split(name)[1].split(r")</h3>\n                            <span class=\'is-size-7 has-text-weight-normal\'>Callsign:")[0].replace(r"(#", "")
-        pin = pin.split(")")[0].replace(" ", "")
+        pin = str(html).split(r'<li class="is-active"><a href="/record.php?pin=')[1].split("&amp;")[0]
         pos = str(html).split(r"addresses.</small>\n")[1].split(name)[0]
         pos = pos.split("<small>")[1].split("-")[0].split(r"/")[0]
 
