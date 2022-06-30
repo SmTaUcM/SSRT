@@ -1,7 +1,7 @@
 '''#-------------------------------------------------------------------------------------------------------------------------------------------------#
 # Name:        SkyShadow's Rapid Reporting Tool (SRRT.py)
 # Purpose:     Rapidy produces WSR and MSE reports and saves them in the clipboard.
-# Version:     v2.00
+# Version:     v2.01
 # Author:      Stuart Macintosh, SkyShadow
 #
 # Created:     29/06/2020
@@ -13,6 +13,11 @@
 #                                                                      Change Log.                                                                   #
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 '''
+------
+v2.01 - 30/06/2022
+------
+- BugFixes - Website HTML changes.
+
 ------
 v2.00 - 31/01/2022
 ------
@@ -234,17 +239,16 @@ class SRRTApp(QMainWindow):
         for pilot in data:
             if r"<a class=\'active pilot\'" in pilot:
                 if "Squadron Commander" not in pilot:
-                    name = pilot.split(r"type=profile\'>")[1].split(r"</a></mark></")[0]
-                    pin, pos = self.getPinPos(pilot, name)
+                    name = pilot.split("/member/")[1].split("'>")[1].split("</a>")[0]
+                    pin = pilot.split("/member/")[1].split("/tc")[0]
+                    pos = self.getPos(pilot, name)
                     self.pilots.append([pin , name, pos])
 
         return self.pilots
         #--------------------------------------------------------------------------------------------------------------------------------------------#
 
 
-    def getPinPos(self, pilot, name):
-        pin = "0000"
-
+    def getPos(self, pilot, name):
 
         ref = pilot.split(r"href=\'")[1].split(r"'>")[0][:-1]
 
@@ -257,11 +261,10 @@ class SRRTApp(QMainWindow):
                 raise Exception("SSRT: Connection Error 2")
 
         name = name.split(" ", 1)[1]
-        pin = str(html).split(r'<li class="is-active"><a href="/record.php?pin=')[1].split("&amp;")[0]
         pos = str(html).split(r"addresses.</small>\n")[1].split(name)[0]
         pos = pos.split("<small>")[1].split("-")[0].split(r"/")[0]
 
-        return str(pin), str(pos)
+        return str(pos)
         #--------------------------------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 
