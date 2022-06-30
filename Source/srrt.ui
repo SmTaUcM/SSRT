@@ -519,9 +519,9 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
   	color: white;
   	background-color: rgb(100, 100, 100);
   }
-  QCalendarWidget QSpinBox { 
-  	color: white; 
-  	background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333); 
+  QCalendarWidget QSpinBox {
+  	color: white;
+  	background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);
   	selection-background-color: rgb(136, 136, 136);
   	selection-color: rgb(255, 255, 255);
   }
@@ -529,29 +529,29 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
   QCalendarWidget QSpinBox::down-button {subcontrol-origin: border; subcontrol-position: bottom right;  width:65px;}
   QCalendarWidget QSpinBox::up-arrow { width:56px;  height:56px; }
   QCalendarWidget QSpinBox::down-arrow { width:56px;  height:56px; }
-   
+
   /* header row */
   QCalendarWidget QWidget { alternate-background-color: rgb(128, 128, 128); }
-   
+
   /* normal days */
-  QCalendarWidget QAbstractItemView:enabled 
+  QCalendarWidget QAbstractItemView:enabled
   {
-  	color: rgb(180, 180, 180);  
-  	background-color: black;  
-  	selection-background-color: rgb(64, 64, 64); 
-  	selection-color: rgb(0, 255, 0); 
+  	color: rgb(180, 180, 180);
+  	background-color: black;
+  	selection-background-color: rgb(64, 64, 64);
+  	selection-color: rgb(0, 255, 0);
   }
-   
+
   /* days in other months */
   /* navigation bar */
 QCalendarWidget QWidget#qt_calendar_navigationbar
-{ 
-  background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333); 
+{
+  background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);
 }
 
-QCalendarWidget QAbstractItemView:disabled 
-{ 
-color: rgb(64, 64, 64); 
+QCalendarWidget QAbstractItemView:disabled
+{
+color: rgb(64, 64, 64);
 }</string>
          </property>
         </widget>
@@ -640,9 +640,9 @@ color: rgb(64, 64, 64);
   	color: white;
   	background-color: rgb(100, 100, 100);
   }
-  QCalendarWidget QSpinBox { 
-  	color: white; 
-  	background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333); 
+  QCalendarWidget QSpinBox {
+  	color: white;
+  	background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);
   	selection-background-color: rgb(136, 136, 136);
   	selection-color: rgb(255, 255, 255);
   }
@@ -650,29 +650,29 @@ color: rgb(64, 64, 64);
   QCalendarWidget QSpinBox::down-button {subcontrol-origin: border; subcontrol-position: bottom right;  width:65px;}
   QCalendarWidget QSpinBox::up-arrow { width:56px;  height:56px; }
   QCalendarWidget QSpinBox::down-arrow { width:56px;  height:56px; }
-   
+
   /* header row */
   QCalendarWidget QWidget { alternate-background-color: rgb(128, 128, 128); }
-   
+
   /* normal days */
-  QCalendarWidget QAbstractItemView:enabled 
+  QCalendarWidget QAbstractItemView:enabled
   {
-  	color: rgb(180, 180, 180);  
-  	background-color: black;  
-  	selection-background-color: rgb(64, 64, 64); 
-  	selection-color: rgb(0, 255, 0); 
+  	color: rgb(180, 180, 180);
+  	background-color: black;
+  	selection-background-color: rgb(64, 64, 64);
+  	selection-color: rgb(0, 255, 0);
   }
-   
+
   /* days in other months */
   /* navigation bar */
 QCalendarWidget QWidget#qt_calendar_navigationbar
-{ 
-  background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333); 
+{
+  background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);
 }
 
-QCalendarWidget QAbstractItemView:disabled 
-{ 
-color: rgb(64, 64, 64); 
+QCalendarWidget QAbstractItemView:disabled
+{
+color: rgb(64, 64, 64);
 }</string>
          </property>
         </widget>
@@ -810,7 +810,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>SkyShadow's Rapid Reporting Tool v2.00</string>
+          <string>SkyShadow's Rapid Reporting Tool v2.01</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -843,7 +843,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Date: 31 January 2022</string>
+          <string>Date: 30 June 2022</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -885,7 +885,7 @@ color: rgb(64, 64, 64);
           </font>
          </property>
          <property name="text">
-          <string>Version : 2.00</string>
+          <string>Version : 2.01</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
